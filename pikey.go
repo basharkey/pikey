@@ -90,11 +90,13 @@ func main() {
                 } else {
                     // load default.conf config if keyboard_device specific one does not exist
                     var keyboard_config string
-                    custom_keyboard_config := filepath.Base(keyboard_path) + ".conf"
+                    config_dir := "/etc/pikey"
+                    default_keyboard_config := filepath.Join(config_dir, "default.conf")
+                    custom_keyboard_config := filepath.Join(config_dir, filepath.Base(keyboard_path) + ".conf")
                     _, err = os.Stat(custom_keyboard_config)
                     if errors.Is(err, os.ErrNotExist) {
                         fmt.Println("Using default config can't find: ", custom_keyboard_config)
-                        keyboard_config = "default.conf"
+                        keyboard_config = default_keyboard_config
                     } else {
                         keyboard_config = custom_keyboard_config
                     }
