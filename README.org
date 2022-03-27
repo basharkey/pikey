@@ -1,8 +1,35 @@
 #+TITLE: Readme
 
-* pikey
+* Pikey
+
+* Installation
+
+#+begin_example
+git clone https://github.com/basharkey/pikey.git
+sudo apt install -y ansible
+cd pikey/
+ansible-playbook main.yml
+#+end_example
 
 * Configuration
+** Start/Stop Service
+#+begin_example
+sudo systemctl start pikey
+sudo systemctl stop pikey
+#+end_example
+
+** Config Files
+
+Default
+#+begin_example
+/etc/pikey/default.conf
+#+end_example
+
+Custom
+#+begin_example
+/etc/pikey/usb-04d9_USB_Keyboard-event-kbd.conf
+#+end_example
+
 ** Layerbinds
 
 Key bind used to switch between layers
