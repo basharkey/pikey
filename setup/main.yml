@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  become: yes
+
+  tasks:
+    - name: Install apt dependencies
+      apt:
+        name:
+          - golang
+        state: latest
+
+    - name: Update boot config
+      lineinfile:
+        path: /boot/config.txt
+        line: "dtoverlay=dwc2"
+        state: present
+
+    - name: Copy modules config
+      copy:
+        src: usb-gadget.conf
+        dest: /etc/modules-load.d/usb-gadget.conf
+        mode: 0644

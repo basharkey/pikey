@@ -1,0 +1,20 @@
+#+TITLE: Todo
+
+* Todo
+- [X] Test all bugs within code comments
+- [ ] Error handling, only for functions that will actually encounter errors (i.e. grabbing keyboard input, parsing config)
+- [ ] Create error when toggle layerbind in config doesn't have opposite defintion on other layer
+
+* Bugs
+- [X] Holding down multi key keybind and then pressing the output key causes crash
+- [ ] When holding down mutli key keybind and then tapping another key it outputs both the keybind output key(s) and the key you tapped (this should only output the key you tapped)
+
+* Features
+- [ ] Handling of multiple keyboards with different configs
+- [ ] On the fly keybind creation
+- [ ] Macro creation (long keybind output)
+- [ ] On the fly macro recording
+- [ ] Multiple keyboard support with different configs
+- [ ] Holding down a key and switching layers doesn't change to outputted key - tmk does not have this - maybe implement in future
+- [ ] Create automatic tests for errors/output key inconsistencies
+- [ ] Potentially create seperate config for single key rebinds in keymap.go

@@ -1,0 +1,51 @@
+#+TITLE: Readme
+
+* pikey
+
+* Configuration
+** Layerbinds
+
+Key bind used to switch between layers
+#+begin_example
+"layerbinds":[
+[
+    ["alt", "f6"], # Layerbind input key(s) list
+    [
+        "0",       # Layer to switch to (0, 1, 2)
+        "toggle",  # Layerbind type (toggle, momentary, tap)
+        "true"     # Suppress layerbind, don't include input keys in ouput (true, false)
+    ]
+]
+#+end_example
+
+Compressed Version
+#+begin_example
+"layerbinds":[
+    [["alt", "f6"], ["0", "toggle", "true"]],
+]
+#+end_example
+
+*** Types
+**** Toggle
+Press the input key(s) once to switch to the specified layer, press again to return to previous layer.
+
+***** Important Note
+Toggle layerbinds require a return layerbind on the layer they toggle to.
+
+Example to toggle between layer 0 and 1 using ALT F6:
+#+begin_example
+{
+    "layerbinds":[
+        [["alt", "f6"], ["0", "toggle", "true"]],
+    ],
+    "layerbinds":[
+        [["alt", "f6"], ["1", "toggle", "true"]],
+    ],
+}
+#+end_example
+
+**** Momentary
+Switches to the specified layer as long as the input key(s) are held down
+
+**** Tap
+Switches to the specified layer once the input key(s) are pressed
