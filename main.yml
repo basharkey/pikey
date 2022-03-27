@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+  become: yes
+
+  tasks:
+    - name: Install apt dependencies
+      apt:
+        name:
+          - golang
+        state: latest
+
+    - name: Add dwc2 to device tree overlay boot config
+      lineinfile:
+        path: /boot/config.txt
+        line: "dtoverlay=dwc2"
+        state: present
+
+    - name: Dynamically load dwc2 to device tree overlay
+      command: dtoverlay dwc2
+
+    - name: Copy modules config
+      copy:
+        src: usb-gadget.conf
+        dest: /etc/modules-load.d/usb-gadget.conf
+        mode: 0644
+
+    - name: Make pikey config directory
+      file:
+        path: /etc/pikey
+        state: directory
+        mode: 0755
+
+    - name: Copy default pikey config
+      copy:
+        src: default.conf
+        dest: /etc/pikey
+
+    - name: Build pikey
+      command: go build pikey.go
+
+    - name: Copy pikey to path
+      copy:
+        src: pikey
+        dest: /usr/local/bin/pikey
+        mode: 0755
+
+    - name: Copy pikey systemd service file
+      copy:
+        src: pikey.service
+        dest: /etc/systemd/system/pikey.service
+        mode: 0755
+
+    - name: Enable pikey service
+      systemd:
+        daemon_reload: yes
+        name: pikey.service
+        state: restarted
+        enabled: yes

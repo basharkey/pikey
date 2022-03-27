@@ -10,7 +10,8 @@
 - [ ] When holding down mutli key keybind and then tapping another key it outputs both the keybind output key(s) and the key you tapped (this should only output the key you tapped)
 
 * Features
-- [ ] Handling of multiple keyboards with different configs
+- [X] Handling of multiple keyboards with different configs
+- [X] Build pikey and Systmed service files and installation
 - [ ] On the fly keybind creation
 - [ ] Macro creation (long keybind output)
 - [ ] On the fly macro recording
