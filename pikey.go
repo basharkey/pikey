@@ -392,7 +392,7 @@ func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
         num_pressed_bind_input_keys := 0
         for _, bind_input_key := range keybind.Input_keys {
             for _, key := range *pressed_keys {
-                if bind_input_key == key.Code {
+                if keycode_equals_bindkey(key.Code, bind_input_key) {
                     num_pressed_bind_input_keys += 1
                 }
             }
