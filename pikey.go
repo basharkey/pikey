@@ -17,6 +17,7 @@ import (
 type Keystate struct {
     Code uint16
     State bool
+    Keybind bool
     Layerbind bool
 }
 
@@ -93,6 +94,7 @@ func main() {
                     config_dir := "/etc/pikey"
                     default_keyboard_config := filepath.Join(config_dir, "default.conf")
                     custom_keyboard_config := filepath.Join(config_dir, filepath.Base(keyboard_path) + ".conf")
+
                     _, err = os.Stat(custom_keyboard_config)
                     if errors.Is(err, os.ErrNotExist) {
                         fmt.Println("Using default config can't find: ", custom_keyboard_config)
@@ -155,7 +157,7 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
                     /* Only add newly pressed key to pressed_keys if it doesn't already contain it
                     Prevents duplicate key entries in pressed_keys when a keybind output key is the same as a pressed key */
                     if contains_key(key_code, &pressed_keys) == false {
-                        pressed_keys = append(pressed_keys, Keystate{key_code, true, false})
+                        pressed_keys = append(pressed_keys, Keystate{key_code, true, false, false})
                     }
 
                     pressed_layerbinds, layer = detect_layerbinds(&pressed_keys, pressed_layerbinds, layerbinds[layer], layer)
@@ -247,7 +249,7 @@ func detect_bind(pressed_keys []Keystate, bind_input_keys []uint16, is_layerbind
     num_pressed_bind_input_keys := 0
     for _, key := range pressed_keys {
         for _, bind_input_key := range bind_input_keys {
-            if (key.State || is_layerbind) && keycode_equals_bindkey(key.Code, bind_input_key) {
+            if (key.State || is_layerbind) && !key.Keybind && keycode_equals_bindkey(key.Code, bind_input_key) {
                 num_pressed_bind_input_keys += 1
             }
         }
@@ -375,7 +377,7 @@ func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
                     }
                 }
                 if !found {
-                    *pressed_keys = append(*pressed_keys, Keystate{bind_output_key, true, false})
+                    *pressed_keys = append(*pressed_keys, Keystate{bind_output_key, true, true, false})
                 }
             }
         }

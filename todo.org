@@ -9,10 +9,13 @@
 * Bugs
 - [X] Holding down multi key keybind and then pressing the output key causes crash
 - [ ] When holding down mutli key keybind and then tapping another key it outputs both the keybind output key(s) and the key you tapped (this should only output the key you tapped)
-- [ ] When changing 2 keys to do the opposite you get an error (i.e alt -> meta, and meta -> alt)
-  - [ ] Create seperate keymaps for each layer, and remap keys based on keybinds that only contains 1 input and 1 output key
-- [ ] meta-tab on Macos doesn't work the same when changing alt -> meta
-  - appears to only affect side agnostic modifiers (meta), doesn't seem to affect side specific mods (leftmeta)
+- [-] When changing 2 keys to do the opposite you get an error (i.e alt -> meta, and meta -> alt)
+  - [-] Should output keys of keybind affect other keybinds/layerbinds
+    - [X] Not other keybinds
+    - [ ] Idk about layerbinds?
+  - [ ] Add another state tracker to Keystate to track if pressed_key in pressed_keys is a keybind output? (maybe make this true/false in config like suppress layerbind ouput)
+- [X] meta-tab on Macos doesn't work the same when changing alt -> meta
+  - [X] appears to only affect side agnostic modifiers (meta), doesn't seem to affect side specific mods (leftmeta)
 
 * Features
 - [X] Handling of multiple keyboards with different configs
