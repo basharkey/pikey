@@ -177,13 +177,14 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
                             pressed_keys = pressed_keys[:len(pressed_keys)-1]
                         }
                     }
+
                     pressed_layerbinds, layer = remove_layerbinds(&pressed_keys, pressed_layerbinds, layerbinds[layer], layer)
+                    pressed_keybinds, index_bind_input_keys = remove_keybinds(&pressed_keys, pressed_keybinds)
                     // if no keys pressed clear buffer
                     if len(pressed_keys) == 0 {
                         type_bytes(gadget_device, make([]byte, 8))
                     // else update with currently pressed keys
                     } else {
-                        pressed_keybinds, index_bind_input_keys = remove_keybinds(&pressed_keys, pressed_keybinds)
                         type_bytes(gadget_device, keys_to_bytes(&pressed_keys))
                         for _, bind_input_key := range index_bind_input_keys {
                             for i, key := range pressed_keys {
@@ -363,6 +364,7 @@ func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
                 for i, key := range *pressed_keys{
                     if keycode_equals_bindkey(key.Code, bind_input_key) {
                         (*pressed_keys)[i].State = false
+                        (*pressed_keys)[i].Keybind = true
                     }
                 }
             }
@@ -387,6 +389,7 @@ func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
 }
 
 func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind) ([]config.Keybind, []uint16) {
+    fmt.Println("before", pressed_keybinds)
     var index_bind_input_keys []uint16
 
     for i, keybind := range pressed_keybinds {
@@ -423,6 +426,7 @@ func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
             }
         }
     }
+    fmt.Println("after", pressed_keybinds)
     return pressed_keybinds, index_bind_input_keys
 }
 
