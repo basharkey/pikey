@@ -51,12 +51,12 @@ func Parse(config_file string) ([][]Layerbind, [][]Keybind) {
             layerbind_suppress, _ := strconv.ParseBool(layerbind[1][2])
             layerbind_type := layerbind[1][1]
             layer_layerbinds = append(layer_layerbinds, Layerbind{
-                                        Input_keys: layerbind_input_keys,
-                                        To_layer: layerbind_to_layer,
-                                        From_layer: layerbind_from_layer,
-                                        Suppress: layerbind_suppress,
-                                        State: 0,
-                                        Type: layerbind_type})
+                Input_keys: layerbind_input_keys,
+                To_layer: layerbind_to_layer,
+                From_layer: layerbind_from_layer,
+                Suppress: layerbind_suppress,
+                State: 0,
+                Type: layerbind_type})
         }
 
         var layer_keybinds []Keybind
@@ -75,7 +75,9 @@ func Parse(config_file string) ([][]Layerbind, [][]Keybind) {
 
                 bind_output_keys = append(bind_output_keys, keycode)
             }
-            layer_keybinds = append(layer_keybinds, Keybind{Input_keys: keybind_input_keys, Output_keys: bind_output_keys})
+            layer_keybinds = append(layer_keybinds, Keybind{
+                Input_keys: keybind_input_keys,
+                Output_keys: bind_output_keys})
         }
         layerbinds = append(layerbinds, layer_layerbinds)
         keybinds = append(keybinds, layer_keybinds)

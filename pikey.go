@@ -364,7 +364,6 @@ func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
                 for i, key := range *pressed_keys{
                     if keycode_equals_bindkey(key.Code, bind_input_key) {
                         (*pressed_keys)[i].State = false
-                        (*pressed_keys)[i].Keybind = true
                     }
                 }
             }
@@ -373,7 +372,7 @@ func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
                 found := false
                 for i, key := range *pressed_keys {
                     // don't true layerbind input keys
-                    if !(*pressed_keys)[i].Layerbind && bind_output_key == key.Code {
+                    if !(*pressed_keys)[i].Layerbind && key.Code == bind_output_key {
                         (*pressed_keys)[i].State = true
                         found = true
                     }
@@ -389,7 +388,6 @@ func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
 }
 
 func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind) ([]config.Keybind, []uint16) {
-    fmt.Println("before", pressed_keybinds)
     var index_bind_input_keys []uint16
 
     for i, keybind := range pressed_keybinds {
@@ -426,7 +424,6 @@ func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
             }
         }
     }
-    fmt.Println("after", pressed_keybinds)
     return pressed_keybinds, index_bind_input_keys
 }
 

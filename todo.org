@@ -4,16 +4,13 @@
 - [X] Test all bugs within code comments
 - [ ] Error handling, only for functions that will actually encounter errors (i.e. grabbing keyboard input, parsing config)
 - [ ] Create error when toggle layerbind in config doesn't have opposite defintion on other layer
-- [ ] Create way to suppress keybinds from affecting other keybinds (see bug as well)
 
 * Bugs
 - [X] Holding down multi key keybind and then pressing the output key causes crash
-- [ ] When holding down mutli key keybind and then tapping another key it outputs both the keybind output key(s) and the key you tapped (this should only output the key you tapped)
-- [-] When changing 2 keys to do the opposite you get an error (i.e alt -> meta, and meta -> alt)
-  - [-] Should output keys of keybind affect other keybinds/layerbinds
-    - [X] Not other keybinds
-    - [ ] Idk about layerbinds?
-  - [ ] Add another state tracker to Keystate to track if pressed_key in pressed_keys is a keybind output? (maybe make this true/false in config like suppress layerbind ouput)
+- [X] When holding down mutli key keybind and then tapping another key it outputs both the keybind output key(s) and the key you tapped (this should only output the key you tapped)
+- [ ] ctrl -> alt blocking ctrl, c -> meta, c
+  - [ ] Rebinds need to be done seperately from keybinds
+- [X] Should output of keybinds affect other keybinds, no
 - [X] meta-tab on Macos doesn't work the same when changing alt -> meta
   - [X] appears to only affect side agnostic modifiers (meta), doesn't seem to affect side specific mods (leftmeta)
 
