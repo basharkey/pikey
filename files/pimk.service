@@ -1,9 +1,9 @@
 [Unit]
-Description = Pikey USB keyboard gadget
+Description = Pimk USB keyboard gadget
 
 [Service]
 Type=simple
-ExecStart = /usr/local/bin/pikey
+ExecStart = /usr/local/bin/pimk
 
 [Install]
 WantedBy = multi-user.target
