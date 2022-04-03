@@ -1,9 +1,9 @@
 package main
 
 import (
-    "github.com/basharkey/pimk/keymap"
-    "github.com/basharkey/pimk/gadget"
-    "github.com/basharkey/pimk/config"
+    "pimk/keymap"
+    "pimk/gadget"
+    "pimk/config"
     "fmt"
     "os"
     "log"
@@ -117,8 +117,9 @@ func main() {
 func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, gadget_device *os.File, keyboard_path string, hooked_keyboards *[]string) error {
     var layerbinds [][]config.Layerbind
     var keybinds [][]config.Keybind
+    var rebinds []config.Rebind
 
-    layerbinds, keybinds = config.Parse(keyboard_config)
+    rebinds, layerbinds, keybinds = config.Parse(keyboard_config)
 
     fmt.Println(keyboard_device)
     fmt.Println(layerbinds)
@@ -163,12 +164,12 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
                     pressed_layerbinds, layer = detect_layerbinds(&pressed_keys, pressed_layerbinds, layerbinds[layer], layer)
                     pressed_keybinds = detect_keybinds(&pressed_keys, pressed_keybinds, keybinds[layer])
 
-                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys))
+                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer]))
                 } else if key_state == 2 {
                     pressed_layerbinds, layer = detect_layerbinds(&pressed_keys, pressed_layerbinds, layerbinds[layer], layer)
                     pressed_keybinds = detect_keybinds(&pressed_keys, pressed_keybinds, keybinds[layer])
 
-                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys))
+                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer]))
                 } else {
                     // remove released key from pressed_keys
                     for i, key := range pressed_keys {
@@ -185,7 +186,7 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
                         type_bytes(gadget_device, make([]byte, 8))
                     // else update with currently pressed keys
                     } else {
-                        type_bytes(gadget_device, keys_to_bytes(&pressed_keys))
+                        type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer]))
                         for _, bind_input_key := range index_bind_input_keys {
                             for i, key := range pressed_keys {
                                 if bind_input_key == key.Code {
@@ -434,7 +435,7 @@ func type_bytes(gadget_device *os.File, key_bytes []byte) {
     check_err(err)
 }
 
-func keys_to_bytes(pressed_keys *[]Keystate) []byte {
+func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
     // remove keys with state of false
     var pressed_keys_slice []uint16
     for _, key := range *pressed_keys {
@@ -472,7 +473,7 @@ func keys_to_bytes(pressed_keys *[]Keystate) []byte {
         // scancode is 0 for modifier keys
         // don't append more than 6 keys
         if keymap.Keys[key].Scancode != 0 {
-            key_bytes = append(key_bytes, keymap.Keys[key].Scancode)
+            key_bytes = append(key_bytes, rebinds.Keys[key].Scancode)
         }
     }
     // pad remaining space with null bytes
