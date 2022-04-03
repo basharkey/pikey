@@ -1,9 +1,9 @@
 package main
 
 import (
-    "pimk/keymap"
-    "pimk/gadget"
-    "pimk/config"
+    "keymap"
+    "gadget"
+    "config"
     "fmt"
     "os"
     "log"
@@ -124,6 +124,9 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
     fmt.Println(keyboard_device)
     fmt.Println(layerbinds)
     fmt.Println(keybinds)
+    for key, value := range rebinds[0].Modifiers {
+        fmt.Println(key, value)
+    }
 
     var layer int = 0
     var pressed_keys []Keystate
@@ -449,9 +452,9 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
     var pressed_mods []byte
     // determine which modifiers are pressed
     for _, key := range pressed_keys_slice {
-        for mod, _ := range keymap.Modifiers {
+        for mod, _ := range rebinds.Modifiers {
             if key == mod {
-                pressed_mods = append(pressed_mods, keymap.Modifiers[mod].Scancode)
+                pressed_mods = append(pressed_mods, rebinds.Modifiers[mod].Scancode)
             }
         }
     }
