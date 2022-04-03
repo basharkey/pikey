@@ -24,35 +24,35 @@
         dest: /etc/modules-load.d/usb-gadget.conf
         mode: 0644
 
-    - name: Make pikey config directory
+    - name: Make pimk config directory
       file:
-        path: /etc/pikey
+        path: /etc/pimk
         state: directory
         mode: 0755
 
-    - name: Copy default pikey config
+    - name: Copy default pimk config
       copy:
         src: default.conf
-        dest: /etc/pikey
+        dest: /etc/pimk
 
-    - name: Build pikey
-      command: go build pikey.go
+    - name: Build pimk
+      command: go build pimk.go
 
-    - name: Copy pikey to path
+    - name: Copy pimk to path
       copy:
-        src: pikey
-        dest: /usr/local/bin/pikey
+        src: pimk
+        dest: /usr/local/bin/pimk
         mode: 0755
 
-    - name: Copy pikey systemd service file
+    - name: Copy pimk systemd service file
       copy:
-        src: pikey.service
-        dest: /etc/systemd/system/pikey.service
+        src: pimk.service
+        dest: /etc/systemd/system/pimk.service
         mode: 0755
 
-    - name: Enable pikey service
+    - name: Enable pimk service
       systemd:
         daemon_reload: yes
-        name: pikey.service
+        name: pimk.service
         state: restarted
         enabled: yes

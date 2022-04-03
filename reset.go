@@ -1,7 +1,7 @@
 package main
 
 import (
-    "github.com/basharkey/pikey/gadget"
+    "github.com/basharkey/pimk/gadget"
     "os"
     "log"
 )

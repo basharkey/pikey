@@ -1,7 +1,7 @@
 package config
 
 import (
-    "github.com/basharkey/pikey/keymap"
+    "github.com/basharkey/pimk/keymap"
     "fmt"
     "encoding/json"
     "io/ioutil"

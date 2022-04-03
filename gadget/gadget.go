@@ -8,7 +8,7 @@ import (
 )
 
 func Initialize() {
-    var base_path string = "/sys/kernel/config/usb_gadget/pikey"
+    var base_path string = "/sys/kernel/config/usb_gadget/pimk"
 
     var files = [][]string {
         {"idVendor", "0x1d6b"}, // Linux Foundation
@@ -17,8 +17,8 @@ func Initialize() {
         {"bcdUSB", "0x0200"}, // USB2
 
         {"strings/0x409/serialnumber", "fedcba9876543210"},
-        {"strings/0x409/manufacturer", "Pikey"},
-        {"strings/0x409/product", "Pikey USB Keyboard Device"},
+        {"strings/0x409/manufacturer", "Pimk"},
+        {"strings/0x409/product", "Pimk USB Keyboard Device"},
 
         {"configs/c.1/strings/0x409/configuration", "Config 1: ECM network"},
         {"configs/c.1/MaxPower", "250"},

@@ -2,7 +2,7 @@ package main
 
 import (
     "testing"
-    "github.com/basharkey/pikey/config"
+    "github.com/basharkey/pimk/config"
 )
 
 func benchmark_detect_keybinds(pressed_keys []Keystate, pressed_keybinds []config.Keybind, layer_keybinds []config.Keybind, b *testing.B) {

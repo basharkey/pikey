@@ -1,31 +1,31 @@
-#+TITLE: Pikey
+#+TITLE: Pimk
 
 * Installation
 
 #+begin_example
-git clone https://github.com/basharkey/pikey.git
+git clone https://github.com/basharkey/pimk.git
 sudo apt install -y ansible
-cd pikey/
+cd pimk/
 ansible-playbook main.yml
 #+end_example
 
 * Configuration
 ** Start/Stop Service
 #+begin_example
-sudo systemctl start pikey
-sudo systemctl stop pikey
+sudo systemctl start pimk
+sudo systemctl stop pimk
 #+end_example
 
 ** Config Files
 
 Default
 #+begin_example
-/etc/pikey/default.conf
+/etc/pimk/default.conf
 #+end_example
 
 Custom
 #+begin_example
-/etc/pikey/usb-04d9_USB_Keyboard-event-kbd.conf
+/etc/pimk/usb-04d9_USB_Keyboard-event-kbd.conf
 #+end_example
 
 ** Layerbinds

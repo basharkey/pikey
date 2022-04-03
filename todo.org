@@ -4,6 +4,7 @@
 - [X] Test all bugs within code comments
 - [ ] Error handling, only for functions that will actually encounter errors (i.e. grabbing keyboard input, parsing config)
 - [ ] Create error when toggle layerbind in config doesn't have opposite defintion on other layer
+- [ ] Create rebinds, with seperate config section, layer support
 
 * Bugs
 - [X] Holding down multi key keybind and then pressing the output key causes crash

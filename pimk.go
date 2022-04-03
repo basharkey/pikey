@@ -1,9 +1,9 @@
 package main
 
 import (
-    "github.com/basharkey/pikey/keymap"
-    "github.com/basharkey/pikey/gadget"
-    "github.com/basharkey/pikey/config"
+    "github.com/basharkey/pimk/keymap"
+    "github.com/basharkey/pimk/gadget"
+    "github.com/basharkey/pimk/config"
     "fmt"
     "os"
     "log"
@@ -91,7 +91,7 @@ func main() {
                 } else {
                     // load default.conf config if keyboard_device specific one does not exist
                     var keyboard_config string
-                    config_dir := "/etc/pikey"
+                    config_dir := "/etc/pimk"
                     default_keyboard_config := filepath.Join(config_dir, "default.conf")
                     custom_keyboard_config := filepath.Join(config_dir, filepath.Base(keyboard_path) + ".conf")
 
