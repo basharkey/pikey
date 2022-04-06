@@ -9,6 +9,7 @@
   - [X] rebinding switching keys to mods and mods to keys (will require moving keys in and out of rebinds.Modifiers)
   - [ ] clean up the if statements into function for config parsing of rebinds
   - [ ] create toggle if rebinds affect keybinds/layerbinds (if key/layerbinds should use default keymap or rebinds keymap)
+  - [ ] seperate keymaps for keybind output and regular keyboard output (done just tidy up code)
 
 * Bugs
 - [X] Holding down multi key keybind and then pressing the output key causes crash

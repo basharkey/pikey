@@ -378,6 +378,7 @@ func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
                     // don't true layerbind input keys
                     if !(*pressed_keys)[i].Layerbind && key.Code == bind_output_key {
                         (*pressed_keys)[i].State = true
+                        (*pressed_keys)[i].Keybind = true
                         found = true
                     }
                 }
@@ -440,10 +441,14 @@ func type_bytes(gadget_device *os.File, key_bytes []byte) {
 
 func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
     // remove keys with state of false
-    var pressed_keys_slice []uint16
+    var pressed_keys_slice []Keystate
     for _, key := range *pressed_keys {
         if key.State {
-            pressed_keys_slice = append(pressed_keys_slice, key.Code)
+            pressed_keys_slice = append(pressed_keys_slice, Keystate{
+                Code: key.Code,
+                State: key.State,
+                Keybind: key.Keybind,
+                Layerbind: key.Layerbind})
         }
     }
     var key_bytes []byte
@@ -452,9 +457,17 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
     var pressed_mods []byte
     // determine which modifiers are pressed
     for _, key := range pressed_keys_slice {
-        for mod, _ := range rebinds.Modifiers {
-            if key == mod {
-                pressed_mods = append(pressed_mods, rebinds.Modifiers[mod].Scancode)
+        if key.Keybind {
+            for mod, _ := range keymap.Modifiers {
+                if key.Code == mod {
+                    pressed_mods = append(pressed_mods, keymap.Modifiers[mod].Scancode)
+                }
+            }
+        } else {
+            for mod, _ := range rebinds.Modifiers {
+                if key.Code == mod {
+                    pressed_mods = append(pressed_mods, rebinds.Modifiers[mod].Scancode)
+                }
             }
         }
     }
@@ -475,8 +488,14 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
     for _, key := range pressed_keys_slice {
         // scancode is 0 for modifier keys
         // don't append more than 6 keys
-        if rebinds.Keys[key].Scancode != 0 {
-            key_bytes = append(key_bytes, rebinds.Keys[key].Scancode)
+        if key.Keybind {
+            if keymap.Keys[key.Code].Scancode != 0 {
+                key_bytes = append(key_bytes, keymap.Keys[key.Code].Scancode)
+            }
+        } else {
+            if rebinds.Keys[key.Code].Scancode != 0 {
+                key_bytes = append(key_bytes, rebinds.Keys[key.Code].Scancode)
+            }
         }
     }
     // pad remaining space with null bytes
