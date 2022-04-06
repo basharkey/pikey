@@ -6,7 +6,9 @@
 - [ ] Create error when toggle layerbind in config doesn't have opposite defintion on other layer
 - [-] Create rebinds, with seperate config section, layer support
   - [X] rebinding for switching keys to keys and mods to mods
-  - [ ] rebinding switching keys to mods and mods to keys (will require moving keys in and out of rebinds.Modifiers)
+  - [X] rebinding switching keys to mods and mods to keys (will require moving keys in and out of rebinds.Modifiers)
+  - [ ] clean up the if statements into function for config parsing of rebinds
+  - [ ] create toggle if rebinds affect keybinds/layerbinds (if key/layerbinds should use default keymap or rebinds keymap)
 
 * Bugs
 - [X] Holding down multi key keybind and then pressing the output key causes crash

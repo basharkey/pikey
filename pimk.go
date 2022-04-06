@@ -475,7 +475,7 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
     for _, key := range pressed_keys_slice {
         // scancode is 0 for modifier keys
         // don't append more than 6 keys
-        if keymap.Keys[key].Scancode != 0 {
+        if rebinds.Keys[key].Scancode != 0 {
             key_bytes = append(key_bytes, rebinds.Keys[key].Scancode)
         }
     }
