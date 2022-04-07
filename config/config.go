@@ -6,6 +6,8 @@ import (
     "encoding/json"
     "io/ioutil"
     "strconv"
+    "errors"
+    "log"
 )
 
 type Layerbind struct {
@@ -51,6 +53,7 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
         layer_rebinds.Multicode_modifiers = make(map[uint16]keymap.Multi_mod_key)
         layer_rebinds.Modifiers = make(map[uint16]keymap.Key)
         layer_rebinds.Keys = make(map[uint16]keymap.Key)
+
         for key, value := range keymap.Multicode_modifiers {
             layer_rebinds.Multicode_modifiers[key] = value
         }
@@ -62,78 +65,10 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
         }
 
         for _, rebind := range layer.Rebinds {
+            rebind_input_keycode := keyname_to_keycode(rebind[0])
             rebind_output_keycode := keyname_to_keycode(rebind[1])
 
-            var rebind_output_keystruct keymap.Key
-            if _, ok := keymap.Multicode_modifiers[rebind_output_keycode]; ok {
-                rebind_output_keystruct.Scancode = keymap.Multicode_modifiers[rebind_output_keycode].Scancode
-                rebind_output_keystruct.Keyname = keymap.Multicode_modifiers[rebind_output_keycode].Keyname
-                fmt.Println(rebind[1], rebind_output_keycode)
-            } else if _, ok := keymap.Modifiers[rebind_output_keycode]; ok {
-                rebind_output_keystruct = keymap.Modifiers[rebind_output_keycode]
-                fmt.Println(rebind[1], rebind_output_keycode)
-            } else if _, ok := keymap.Keys[rebind_output_keycode]; ok {
-                rebind_output_keystruct = keymap.Keys[rebind_output_keycode]
-                fmt.Println(rebind[1], rebind_output_keycode)
-            }
-
-            rebind_input_keycode := keyname_to_keycode(rebind[0])
-
-            if multicode_mod, ok := keymap.Multicode_modifiers[rebind_input_keycode]; ok {
-                if _, ok := keymap.Keys[rebind_output_keycode]; ok {
-                    // if you are rebinding a multicode modifier to a key
-                    // remove the key from modifiers and add both modifiers to keys
-                    delete(layer_rebinds.Modifiers, multicode_mod.Leftkey)
-                    delete(layer_rebinds.Modifiers, multicode_mod.Rightkey)
-                    layer_rebinds.Keys[multicode_mod.Leftkey] = rebind_output_keystruct
-                    layer_rebinds.Keys[multicode_mod.Rightkey] = rebind_output_keystruct
-                } else if  multicode_mod2, ok := keymap.Multicode_modifiers[rebind_output_keycode]; ok {
-                    // if you are rebinding a  multicode modifier to a multicode modifier
-                    // add the modifier as the left mulitcode modifier to modifiers
-                    layer_rebinds.Modifiers[multicode_mod.Leftkey] = keymap.Key{
-                        Scancode: keymap.Modifiers[multicode_mod2.Leftkey].Scancode,
-                        Keyname: keymap.Modifiers[multicode_mod2.Leftkey].Keyname}
-                    layer_rebinds.Modifiers[multicode_mod.Rightkey] = keymap.Key{
-                        Scancode: keymap.Modifiers[multicode_mod2.Leftkey].Scancode,
-                        Keyname: keymap.Modifiers[multicode_mod2.Leftkey].Keyname}
-                } else {
-                    layer_rebinds.Modifiers[multicode_mod.Leftkey] = rebind_output_keystruct
-                    layer_rebinds.Modifiers[multicode_mod.Rightkey] = rebind_output_keystruct
-                }
-
-            } else if _, ok := keymap.Modifiers[rebind_input_keycode]; ok {
-                if _, ok := keymap.Keys[rebind_output_keycode]; ok {
-                    // if you are rebinding a modifier to a key
-                    // remove the key from modifiers and add it to keys
-                    delete(layer_rebinds.Modifiers, rebind_input_keycode)
-                    layer_rebinds.Keys[rebind_input_keycode] = rebind_output_keystruct
-                } else if  multicode_mod, ok := keymap.Multicode_modifiers[rebind_output_keycode]; ok {
-                    // if you are rebinding a modifier to a multicode modifier
-                    // add the modifier as the left mulitcode modifier to modifiers
-                    layer_rebinds.Modifiers[rebind_input_keycode] = keymap.Key{
-                        Scancode: keymap.Modifiers[multicode_mod.Leftkey].Scancode,
-                        Keyname: keymap.Modifiers[multicode_mod.Leftkey].Keyname}
-                } else {
-                    layer_rebinds.Modifiers[rebind_input_keycode] = rebind_output_keystruct
-                }
-
-            } else if _, ok := keymap.Keys[rebind_input_keycode]; ok {
-                if _, ok := keymap.Modifiers[rebind_output_keycode]; ok {
-                    // if you are rebinding a key to a modifier
-                    // remove the key from keys and add it to modifiers
-                    delete(layer_rebinds.Keys, rebind_input_keycode)
-                    layer_rebinds.Modifiers[rebind_input_keycode] = rebind_output_keystruct
-                } else if  multicode_mod, ok := keymap.Multicode_modifiers[rebind_output_keycode]; ok {
-                    // if you are rebinding a key to a multicode modifier
-                    // remove the key from keys and add it to modifiers as the left multicode modifier
-                    delete(layer_rebinds.Keys, rebind_input_keycode)
-                    layer_rebinds.Modifiers[rebind_input_keycode] = keymap.Key{
-                        Scancode: keymap.Modifiers[multicode_mod.Leftkey].Scancode,
-                        Keyname: keymap.Modifiers[multicode_mod.Leftkey].Keyname}
-                } else {
-                    layer_rebinds.Keys[rebind_input_keycode] = rebind_output_keystruct
-                }
-            }
+            rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
         }
 
         var layer_layerbinds []Layerbind
@@ -183,6 +118,91 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
         keybinds = append(keybinds, layer_keybinds)
     }
     return rebinds, layerbinds, keybinds
+}
+
+func keycode_to_keytype(keycode uint16) (string, error) {
+    if _, ok := keymap.Multicode_modifiers[keycode]; ok {
+        return "multicode_mod", nil
+    } else if _, ok := keymap.Modifiers[keycode]; ok {
+        return "mod", nil
+    } else if _, ok := keymap.Keys[keycode]; ok {
+        return "key", nil
+    }
+    return "", errors.New("keycode not in keymap")
+}
+
+func rebind_key(layer_rebinds *Rebind, input_keycode uint16, output_keycode uint16) {
+    input_keytype, err := keycode_to_keytype(input_keycode)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    output_keytype, err := keycode_to_keytype(output_keycode)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    if input_keytype == "multicode_mod" {
+        input_keystruct := keymap.Multicode_modifiers[input_keycode]
+
+        if output_keytype == "multicode_mod" {
+            output_keystruct := keymap.Multicode_modifiers[output_keycode]
+            layer_rebinds.Modifiers[input_keystruct.Leftkey] = keymap.Key{
+                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
+                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+
+            layer_rebinds.Modifiers[input_keystruct.Rightkey] = keymap.Key{
+                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
+                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+
+        } else if output_keytype == "mod" {
+            output_keystruct := keymap.Modifiers[output_keycode]
+            layer_rebinds.Modifiers[input_keystruct.Leftkey] = output_keystruct
+            layer_rebinds.Modifiers[input_keystruct.Rightkey] = output_keystruct
+
+        } else if output_keytype == "key" {
+            output_keystruct := keymap.Keys[output_keycode]
+            delete(layer_rebinds.Modifiers, input_keystruct.Leftkey)
+            delete(layer_rebinds.Modifiers, input_keystruct.Rightkey)
+            layer_rebinds.Keys[input_keystruct.Leftkey] = output_keystruct
+            layer_rebinds.Keys[input_keystruct.Rightkey] = output_keystruct
+        }
+
+    } else if input_keytype == "mod" {
+        if output_keytype == "multicode_mod" {
+            output_keystruct := keymap.Multicode_modifiers[output_keycode]
+            layer_rebinds.Modifiers[input_keycode] = keymap.Key{
+                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
+                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+
+        } else if output_keytype == "mod" {
+            output_keystruct := keymap.Modifiers[output_keycode]
+            layer_rebinds.Modifiers[input_keycode] = output_keystruct
+
+        } else if output_keytype == "key" {
+            output_keystruct := keymap.Keys[output_keycode]
+            delete(layer_rebinds.Modifiers, input_keycode)
+            layer_rebinds.Keys[input_keycode] = output_keystruct
+        }
+
+    } else if input_keytype == "key" {
+        if output_keytype == "multicode_mod" {
+            output_keystruct := keymap.Multicode_modifiers[output_keycode]
+            delete(layer_rebinds.Keys, input_keycode)
+            layer_rebinds.Modifiers[input_keycode] = keymap.Key{
+                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
+                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+
+        } else if output_keytype == "mod" {
+            output_keystruct := keymap.Modifiers[output_keycode]
+            delete(layer_rebinds.Keys, input_keycode)
+            layer_rebinds.Modifiers[input_keycode] = output_keystruct
+
+        } else if output_keytype == "key" {
+            output_keystruct := keymap.Keys[output_keycode]
+            layer_rebinds.Keys[input_keycode] = output_keystruct
+        }
+    }
 }
 
 func keyname_to_keycode(keyname string) uint16 {

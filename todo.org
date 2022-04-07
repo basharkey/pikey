@@ -9,13 +9,14 @@
   - [X] rebinding switching keys to mods and mods to keys (will require moving keys in and out of rebinds.Modifiers)
   - [ ] clean up the if statements into function for config parsing of rebinds
   - [ ] create toggle if rebinds affect keybinds/layerbinds (if key/layerbinds should use default keymap or rebinds keymap)
-  - [ ] seperate keymaps for keybind output and regular keyboard output (done just tidy up code)
+  - [ ] seperate keymaps for keybind output and regular keyboard output (done just tidy up code) cleanup keys_to_bytes
 
 * Bugs
 - [X] Holding down multi key keybind and then pressing the output key causes crash
 - [X] When holding down mutli key keybind and then tapping another key it outputs both the keybind output key(s) and the key you tapped (this should only output the key you tapped)
 - [ ] ctrl -> alt blocking ctrl, c -> meta, c
   - [ ] Rebinds need to be done seperately from keybinds
+- [ ] Macos caps lock rebind causes lag??
 - [X] Should output of keybinds affect other keybinds, no
 - [X] meta-tab on Macos doesn't work the same when changing alt -> meta
   - [X] appears to only affect side agnostic modifiers (meta), doesn't seem to affect side specific mods (leftmeta)
