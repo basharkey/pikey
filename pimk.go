@@ -433,71 +433,83 @@ func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
 }
 
 func type_bytes(gadget_device *os.File, key_bytes []byte) {
-    //fmt.Println("typing:", key_bytes)
+    fmt.Println("typing:", key_bytes)
     //key_bytes = make([]byte, 8)
     _, err := gadget_device.Write(key_bytes)
     check_err(err)
 }
 
+// efficient way of prepending to slice
+// https://stackoverflow.com/questions/53737435/how-to-prepend-int-to-slice
+func prepend_byte(x []byte, y byte) []byte {
+    x = append(x, 0)
+    copy(x[1:], x)
+    x[0] = y
+    return x
+}
+
 func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
-    // remove keys with state of false
-    var pressed_keys_slice []Keystate
+    /*
+    key_bytes slice
+    [1, 0, 42, 35, 78, 0, 0, 0]
+    byte 1 = modifier byte (bitwise OR of each modifier bit)
+    byte 2 = reserved byte
+    bytes 3-8 = key bytes
+    */
+
+    var key_bytes []byte
+    var pressed_mods []byte
+
     for _, key := range *pressed_keys {
+        // remove keys with state of false
         if key.State {
-            pressed_keys_slice = append(pressed_keys_slice, Keystate{
-                Code: key.Code,
-                State: key.State,
-                Keybind: key.Keybind,
-                Layerbind: key.Layerbind})
+            // if key is apart of a keybind use default keymap
+            if key.Keybind {
+                // check if key is key and not a modifier
+                if _, ok := keymap.Keys[key.Code]; ok {
+                    key_bytes = append(key_bytes, keymap.Keys[key.Code].Scancode)
+                } else {
+                    // add modifiers in pressed keys to pressed_mods
+                    for mod, _ := range keymap.Modifiers {
+                        if key.Code == mod {
+                            pressed_mods = append(pressed_mods, keymap.Modifiers[mod].Scancode)
+                        }
+                    }
+                }
+            // if key is not apart of a keybind use rebinds keymap
+            } else {
+                // check if key is key and not a modifier
+                if _, ok := rebinds.Keys[key.Code]; ok {
+                    key_bytes = append(key_bytes, rebinds.Keys[key.Code].Scancode)
+                } else {
+                    // add modifiers in pressed keys to pressed_mods
+                    for mod, _ := range rebinds.Modifiers {
+                        if key.Code == mod {
+                            pressed_mods = append(pressed_mods, rebinds.Modifiers[mod].Scancode)
+                        }
+                    }
+                }
+            }
         }
     }
-    var key_bytes []byte
+
+    // prepend reserved byte
+    key_bytes = prepend_byte(key_bytes, 0)
 
     // generate modifier byte
-    var pressed_mods []byte
-    // determine which modifiers are pressed
-    for _, key := range pressed_keys_slice {
-        if key.Keybind {
-            for mod, _ := range keymap.Modifiers {
-                if key.Code == mod {
-                    pressed_mods = append(pressed_mods, keymap.Modifiers[mod].Scancode)
-                }
-            }
-        } else {
-            for mod, _ := range rebinds.Modifiers {
-                if key.Code == mod {
-                    pressed_mods = append(pressed_mods, rebinds.Modifiers[mod].Scancode)
-                }
-            }
-        }
-    }
     if len(pressed_mods) > 0 {
         // bitwise OR each modifier bit to create modifier byte
         var mod_byte byte
         for i, _ := range pressed_mods {
             mod_byte = mod_byte | pressed_mods[i]
         }
-        key_bytes = append(key_bytes, mod_byte)
+        // prepend modifier byte
+        key_bytes = prepend_byte(key_bytes, mod_byte)
     } else {
-        key_bytes = append(key_bytes, 0)
+        // prepend empty modifier byte
+        key_bytes = prepend_byte(key_bytes, 0)
     }
 
-    // reserved byte
-    key_bytes = append(key_bytes, 0)
-    // key bytes
-    for _, key := range pressed_keys_slice {
-        // scancode is 0 for modifier keys
-        // don't append more than 6 keys
-        if key.Keybind {
-            if keymap.Keys[key.Code].Scancode != 0 {
-                key_bytes = append(key_bytes, keymap.Keys[key.Code].Scancode)
-            }
-        } else {
-            if rebinds.Keys[key.Code].Scancode != 0 {
-                key_bytes = append(key_bytes, rebinds.Keys[key.Code].Scancode)
-            }
-        }
-    }
     // pad remaining space with null bytes
     key_bytes = append(key_bytes, make([]byte, 8-len(key_bytes))...)
     return key_bytes
