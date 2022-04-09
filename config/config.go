@@ -1,11 +1,13 @@
 package config
 
 import (
-    "github.com/basharkey/pimk/keymap"
+    "keymap"
     "fmt"
     "encoding/json"
     "io/ioutil"
     "strconv"
+    "errors"
+    "log"
 )
 
 type Layerbind struct {
@@ -22,12 +24,19 @@ type Keybind struct {
     Output_keys []uint16
 }
 
+type Rebind struct {
+    Multicode_modifiers map[uint16]keymap.Multi_mod_key
+    Modifiers map[uint16]keymap.Key
+    Keys map[uint16]keymap.Key
+}
+
 type Layer struct {
+    Rebinds [][]string
     Layerbinds [][][]string
     Keybinds [][][]string
 }
 
-func Parse(config_file string) ([][]Layerbind, [][]Keybind) {
+func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
     config, err := ioutil.ReadFile(config_file)
     if err != nil {
         fmt.Println(err)
@@ -36,14 +45,38 @@ func Parse(config_file string) ([][]Layerbind, [][]Keybind) {
     var layers []Layer
     json.Unmarshal([]byte(string(config)), &layers)
 
+    var rebinds []Rebind
     var layerbinds [][]Layerbind
     var keybinds [][]Keybind
     for i, layer := range layers {
+        layer_rebinds := new(Rebind)
+        layer_rebinds.Multicode_modifiers = make(map[uint16]keymap.Multi_mod_key)
+        layer_rebinds.Modifiers = make(map[uint16]keymap.Key)
+        layer_rebinds.Keys = make(map[uint16]keymap.Key)
+
+        for key, value := range keymap.Multicode_modifiers {
+            layer_rebinds.Multicode_modifiers[key] = value
+        }
+        for key, value := range keymap.Modifiers {
+            layer_rebinds.Modifiers[key] = value
+        }
+        for key, value := range keymap.Keys {
+            layer_rebinds.Keys[key] = value
+        }
+
+        for _, rebind := range layer.Rebinds {
+            rebind_input_keycode := keyname_to_keycode(rebind[0])
+            rebind_output_keycode := keyname_to_keycode(rebind[1])
+
+            rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
+        }
+
         var layer_layerbinds []Layerbind
         for _, layerbind := range layer.Layerbinds {
             var layerbind_input_keys []uint16
             for _, layerbind_input_key := range layerbind[0] {
-                layerbind_input_keys = append(layerbind_input_keys, keyname_to_keycode(layerbind_input_key))
+                keycode := keyname_to_keycode(layerbind_input_key)
+                layerbind_input_keys = append(layerbind_input_keys, keycode)
             }
 
             layerbind_to_layer, _ := strconv.Atoi(layerbind[1][0])
@@ -63,7 +96,8 @@ func Parse(config_file string) ([][]Layerbind, [][]Keybind) {
         for _, keybind := range layer.Keybinds {
             var keybind_input_keys []uint16
             for _, keybind_input_key := range keybind[0] {
-                keybind_input_keys = append(keybind_input_keys, keyname_to_keycode(keybind_input_key))
+                keycode := keyname_to_keycode(keybind_input_key)
+                keybind_input_keys = append(keybind_input_keys, keycode)
             }
 
             var bind_output_keys []uint16
@@ -79,10 +113,96 @@ func Parse(config_file string) ([][]Layerbind, [][]Keybind) {
                 Input_keys: keybind_input_keys,
                 Output_keys: bind_output_keys})
         }
+        rebinds = append(rebinds, *layer_rebinds)
         layerbinds = append(layerbinds, layer_layerbinds)
         keybinds = append(keybinds, layer_keybinds)
     }
-    return layerbinds, keybinds
+    return rebinds, layerbinds, keybinds
+}
+
+func keycode_to_keytype(keycode uint16) (string, error) {
+    if _, ok := keymap.Multicode_modifiers[keycode]; ok {
+        return "multicode_mod", nil
+    } else if _, ok := keymap.Modifiers[keycode]; ok {
+        return "mod", nil
+    } else if _, ok := keymap.Keys[keycode]; ok {
+        return "key", nil
+    }
+    return "", errors.New("keycode not in keymap")
+}
+
+func rebind_key(layer_rebinds *Rebind, input_keycode uint16, output_keycode uint16) {
+    input_keytype, err := keycode_to_keytype(input_keycode)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    output_keytype, err := keycode_to_keytype(output_keycode)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    if input_keytype == "multicode_mod" {
+        input_keystruct := keymap.Multicode_modifiers[input_keycode]
+
+        if output_keytype == "multicode_mod" {
+            output_keystruct := keymap.Multicode_modifiers[output_keycode]
+            layer_rebinds.Modifiers[input_keystruct.Leftkey] = keymap.Key{
+                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
+                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+
+            layer_rebinds.Modifiers[input_keystruct.Rightkey] = keymap.Key{
+                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
+                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+
+        } else if output_keytype == "mod" {
+            output_keystruct := keymap.Modifiers[output_keycode]
+            layer_rebinds.Modifiers[input_keystruct.Leftkey] = output_keystruct
+            layer_rebinds.Modifiers[input_keystruct.Rightkey] = output_keystruct
+
+        } else if output_keytype == "key" {
+            output_keystruct := keymap.Keys[output_keycode]
+            delete(layer_rebinds.Modifiers, input_keystruct.Leftkey)
+            delete(layer_rebinds.Modifiers, input_keystruct.Rightkey)
+            layer_rebinds.Keys[input_keystruct.Leftkey] = output_keystruct
+            layer_rebinds.Keys[input_keystruct.Rightkey] = output_keystruct
+        }
+
+    } else if input_keytype == "mod" {
+        if output_keytype == "multicode_mod" {
+            output_keystruct := keymap.Multicode_modifiers[output_keycode]
+            layer_rebinds.Modifiers[input_keycode] = keymap.Key{
+                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
+                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+
+        } else if output_keytype == "mod" {
+            output_keystruct := keymap.Modifiers[output_keycode]
+            layer_rebinds.Modifiers[input_keycode] = output_keystruct
+
+        } else if output_keytype == "key" {
+            output_keystruct := keymap.Keys[output_keycode]
+            delete(layer_rebinds.Modifiers, input_keycode)
+            layer_rebinds.Keys[input_keycode] = output_keystruct
+        }
+
+    } else if input_keytype == "key" {
+        if output_keytype == "multicode_mod" {
+            output_keystruct := keymap.Multicode_modifiers[output_keycode]
+            delete(layer_rebinds.Keys, input_keycode)
+            layer_rebinds.Modifiers[input_keycode] = keymap.Key{
+                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
+                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+
+        } else if output_keytype == "mod" {
+            output_keystruct := keymap.Modifiers[output_keycode]
+            delete(layer_rebinds.Keys, input_keycode)
+            layer_rebinds.Modifiers[input_keycode] = output_keystruct
+
+        } else if output_keytype == "key" {
+            output_keystruct := keymap.Keys[output_keycode]
+            layer_rebinds.Keys[input_keycode] = output_keystruct
+        }
+    }
 }
 
 func keyname_to_keycode(keyname string) uint16 {
