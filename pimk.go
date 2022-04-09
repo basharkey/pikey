@@ -468,26 +468,18 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
                 // check if key is key and not a modifier
                 if _, ok := keymap.Keys[key.Code]; ok {
                     key_bytes = append(key_bytes, keymap.Keys[key.Code].Scancode)
-                } else {
+                } else if _, ok := keymap.Modifiers[key.Code]; ok {
                     // add modifiers in pressed keys to pressed_mods
-                    for mod, _ := range keymap.Modifiers {
-                        if key.Code == mod {
-                            pressed_mods = append(pressed_mods, keymap.Modifiers[mod].Scancode)
-                        }
-                    }
+                    pressed_mods = append(pressed_mods, keymap.Modifiers[key.Code].Scancode)
                 }
             // if key is not apart of a keybind use rebinds keymap
             } else {
                 // check if key is key and not a modifier
                 if _, ok := rebinds.Keys[key.Code]; ok {
                     key_bytes = append(key_bytes, rebinds.Keys[key.Code].Scancode)
-                } else {
+                } else if _, ok := rebinds.Modifiers[key.Code]; ok {
                     // add modifiers in pressed keys to pressed_mods
-                    for mod, _ := range rebinds.Modifiers {
-                        if key.Code == mod {
-                            pressed_mods = append(pressed_mods, rebinds.Modifiers[mod].Scancode)
-                        }
-                    }
+                    pressed_mods = append(pressed_mods, rebinds.Modifiers[key.Code].Scancode)
                 }
             }
         }

@@ -1,6 +1,7 @@
 #+TITLE: Todo
 
 * Todo
+- [X] Create oneshot layerbind (switches to layer and returns after 1 keypress of any key on that layer)
 - [X] Test all bugs within code comments
 - [ ] Error handling, only for functions that will actually encounter errors (i.e. grabbing keyboard input, parsing config)
 - [ ] Create error when toggle layerbind in config doesn't have opposite defintion on other layer
@@ -9,7 +10,7 @@
   - [X] rebinding switching keys to mods and mods to keys (will require moving keys in and out of rebinds.Modifiers)
   - [ ] clean up the if statements into function for config parsing of rebinds
   - [ ] create toggle if rebinds affect keybinds/layerbinds (if key/layerbinds should use default keymap or rebinds keymap)
-  - [ ] seperate keymaps for keybind output and regular keyboard output (done just tidy up code) cleanup keys_to_bytes
+  - [X] seperate keymaps for keybind output and regular keyboard output (done just tidy up code) cleanup keys_to_bytes
 
 * Bugs
 - [X] Holding down multi key keybind and then pressing the output key causes crash
