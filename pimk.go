@@ -200,6 +200,7 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
                     }
                 }
                 fmt.Println("keys", pressed_keys)
+                fmt.Println("layer", layer)
                 fmt.Println("keybinds", pressed_keybinds)
                 fmt.Println("layerbinds", pressed_layerbinds)
                 fmt.Println("-------------------------------")
@@ -321,6 +322,10 @@ func detect_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
                 layer = layerbind.To_layer
                 layerbind.State = 1
                 pressed_layerbinds = append(pressed_layerbinds, layerbind)
+            } else if layerbind.Type == "oneshot"{
+                layer = layerbind.To_layer
+                layerbind.State = 1
+                pressed_layerbinds = append(pressed_layerbinds, layerbind)
             }
         }
     }
@@ -341,6 +346,16 @@ func remove_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
                 if layerbind.State == 1 {
                     pressed_layerbinds[i].State = 2
                 } else if layerbind.State == 3 {
+                    pressed_layerbinds[i] = pressed_layerbinds[len(pressed_layerbinds)-1]
+                    pressed_layerbinds = pressed_layerbinds[:len(pressed_layerbinds)-1]
+                    layer = layerbind.From_layer
+                    check_again = true
+                }
+            }
+            if layerbind.Type == "oneshot" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) && layer == layerbind.To_layer {
+                if layerbind.State == 1 {
+                    pressed_layerbinds[i].State = 2
+                } else if layerbind.State == 2 {
                     pressed_layerbinds[i] = pressed_layerbinds[len(pressed_layerbinds)-1]
                     pressed_layerbinds = pressed_layerbinds[:len(pressed_layerbinds)-1]
                     layer = layerbind.From_layer
