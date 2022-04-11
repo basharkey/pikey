@@ -154,7 +154,7 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
             key_code := event.Code
             key_state := event.Value
 
-            if key_type != 0 && key_type != 4 {
+            if key_type != 0 && key_type != 4 && key_type != 17 {
                 if key_state == 1 {
                     // TODO dont add keys if 6 are currently pressed
 

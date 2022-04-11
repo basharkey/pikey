@@ -13,6 +13,7 @@
   - [X] seperate keymaps for keybind output and regular keyboard output (done just tidy up code) cleanup keys_to_bytes
 
 * Bugs
+- [X] scroll lock presses "1"s after initial press
 - [X] Holding down multi key keybind and then pressing the output key causes crash
 - [X] When holding down mutli key keybind and then tapping another key it outputs both the keybind output key(s) and the key you tapped (this should only output the key you tapped)
 - [ ] ctrl -> alt blocking ctrl, c -> meta, c
