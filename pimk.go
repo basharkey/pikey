@@ -186,7 +186,7 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
                     pressed_keybinds, index_bind_input_keys = remove_keybinds(&pressed_keys, pressed_keybinds)
                     // if no keys pressed clear buffer
                     if len(pressed_keys) == 0 {
-                        type_bytes(gadget_device, make([]byte, 8))
+                        type_bytes(gadget_device, []byte{1, 0, 0, 0, 0, 0, 0, 0, 0})
                     // else update with currently pressed keys
                     } else {
                         type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer]))
@@ -517,8 +517,11 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
         key_bytes = prepend_byte(key_bytes, 0)
     }
 
+    // prepend report ID byte for device 1
+    key_bytes = prepend_byte(key_bytes, 1)
+
     // pad remaining space with null bytes
-    key_bytes = append(key_bytes, make([]byte, 8-len(key_bytes))...)
+    key_bytes = append(key_bytes, make([]byte, 9-len(key_bytes))...)
     return key_bytes
 }
 
