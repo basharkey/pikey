@@ -135,6 +135,7 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
     var index_bind_input_keys []uint16
 
     // main keyboard_device event loop
+    keyboard_device.Grab()
     for {
         // check if events can be read from keyboard_device (if keyboard is still connected)
         key_events, err := keyboard_device.Read()
