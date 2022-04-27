@@ -75,21 +75,13 @@ func Initialize() {
             "\x09\x01" + // Usage (Consumer Control)
             "\xa1\x01" + // Collection (Application)
             "\x85\x02" + // Report ID (2)
-            "\x05\x0c" + // Usage Page (Consumer)
-            "\x15\x00" + // Logical Minimum (0)
-            "\x25\x01" + // Logical Maximum (1)
-            "\x75\x01" + // Report Size (1)
-            "\x95\x07" + // Report Count (7)
-            "\x09\xb5" + // Usage (Scan Next Track)     0000 0001 1
-            "\x09\xb6" + // Usage (Scan Previous Track) 0000 0010 2
-            "\x09\xb7" + // Usage (Stop)                0000 0100 4
-            "\x09\xcd" + // Usage (Play Pause)          0000 1000 8
-            "\x09\xe2" + // Usage (Mute)                0001 0000 16
-            "\x09\xe9" + // Usage (Volume Inc)          0010 0000 32
-            "\x09\xea" + // Usage (Volume Dec)          0100 0000 64
-            "\x81\x02" + // Input (Variable)
-            "\x95\x01" + // Report Count (1)
-            "\x81\x01" + // Input (Constant)
+            "\x16\x01\x00" + // Logical Minimum (0) 
+            "\x26\x9c\x02" + // Logical Maximum (1)
+            "\x1a\x01\x00" + // Usage Minimum ()
+            "\x2a\x9c\x02" + // Usage Maximum ()
+            "\x75\x10" + // Report Size (16)             num of bits per field
+            "\x95\x01" + // Report Count (1)           num of fields
+            "\x81\x00" + // Input (Constant)
             "\xc0"}, // End Collection
     }
 
