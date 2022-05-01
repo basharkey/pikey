@@ -7,10 +7,10 @@ import sys
 # usage
 
 # consumer page
-# ./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 124-135 consumer-hut.csv
+# ./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 124-135 tables/consumer-hut.csv
 
 # keyboard page
-# ./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 89-95 keyboard-hut.csv
+# ./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 89-95 tables/keyboard-hut.csv
 
 # ~/Downloads/hut1_3_0.pdf
 hut = sys.argv[1]
