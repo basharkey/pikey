@@ -7,12 +7,17 @@ import sys
 # usage
 
 # consumer page
-# ./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 124-135
+# ./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 124-135 consumer-hut.csv
+
+# keyboard page
+# ./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 89-95 keyboard-hut.csv
 
 # ~/Downloads/hut1_3_0.pdf
 hut = sys.argv[1]
 # 123-134
 page_range = sys.argv[2]
+# output file
+out_file = sys.argv[3]
 tables = camelot.read_pdf(hut, pages=page_range)
 
 frames = []
@@ -40,6 +45,10 @@ ct = ct[ct['UsageName'].str.contains('Usage Name')==False]
 # remove reference numbers e.g. [5]
 ct = ct.replace('\[\d*\]', '', regex=True)
 
+# replaced keyboard/keypad words
+ct = ct.replace('Keypad', 'KP', regex=True)
+ct = ct.replace('Keyboard', 'KB', regex=True)
+
 # remove the and and anything after it
 ct = ct.replace('and.*', '', regex=True)
 
@@ -58,17 +67,15 @@ ct = ct.replace('/', '_', regex=True)
 # remove newlines
 ct = ct.replace('\n', '', regex=True)
 
-# replace + with string version
-ct = ct.replace('\+', 'PLUS', regex=True)
-
 # remove brackets
 ct = ct.replace('\(', '', regex=True)
 ct = ct.replace('\)', '', regex=True)
 
 # uppercase column
-#ct = ct[ct['UsageName'].str.upper()]
+ct['UsageName'] = ct['UsageName'].str.upper()
+
+# convert Usage ID hex to decimal
+ct['UsageID'] = ct['UsageID'].apply(int, base=16)
 
 print(ct)
-
-
-ct.to_csv('tables.csv', header=False, index=False)
+ct.to_csv(out_file, header=False, index=False)
