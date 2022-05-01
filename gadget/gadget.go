@@ -38,6 +38,8 @@ func Initialize() {
         {filepath.Join(functions_dir, "report_length"), "8"},
         // sudo usbhid-dump -d beaf | tail -n +2 | xxd -r -p | hidrd-convert -o spec
         {filepath.Join(functions_dir, "report_desc"),
+            // fix keyboard descriptor packet isnt 9 bytes like it should be
+            // maybe steal tmk one for more than 6k rollover
             "\x05\x01" + // Usage Page (Desktop)
             "\x09\x06" + // Usage (Keyboard)
             "\xa1\x01" + // Collection (Application)
@@ -75,10 +77,10 @@ func Initialize() {
             "\x09\x01" + // Usage (Consumer Control)
             "\xa1\x01" + // Collection (Application)
             "\x85\x02" + // Report ID (2)
-            "\x16\x01\x00" + // Logical Minimum (0) 
-            "\x26\x9c\x02" + // Logical Maximum (1)
-            "\x1a\x01\x00" + // Usage Minimum ()
-            "\x2a\x9c\x02" + // Usage Maximum ()
+            "\x16\x01\x00" + // Logical Minimum (01) 
+            "\x26\x14\x05" + // Logical Maximum (514)
+            "\x1a\x01\x00" + // Usage Minimum (01)
+            "\x2a\x14\x05" + // Usage Maximum (514)
             "\x75\x10" + // Report Size (16)             num of bits per field
             "\x95\x01" + // Report Count (1)           num of fields
             "\x81\x00" + // Input (Constant)
