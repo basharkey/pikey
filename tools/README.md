@@ -1,5 +1,13 @@
 ## Extract HID usage tables from specification PDF
 
+Keymap Processing Flow
+
+1. keyboard-hut.csv
+2. cleaned-keyboard-hut.csv
+3. registered-keyboard-hut.csv
+4. keyboard-keymap.txt
+
+
 https://usb.org/sites/default/files/hut1_3_0.pdf
 
 
@@ -11,12 +19,18 @@ consumer page
 ```
 ./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 124-135 tables/consumer-hut.csv
 ```
+system page
+```
+./extract-hid-tables.py ~/Downloads/hut1_3_0.pdf 33-36 tables/system-hut.csv
+```
 
 Manually edited huts
 
 cleaned-keyboard-hut.csv
 
 cleaned-consumer-hut.csv
+
+cleaned-system-hut.csv
 
 ## Generate final keymap
 
@@ -39,6 +53,11 @@ keyboard
 consumer
 ```
 ./evcodes tables/registered-consumer-hut.csv 192.168.1.0 /dev/input/by-id/usb-Pimk_USB_Keyboard_Device_fedcba9876543210-event-kbd 2 > consumer-keymap.txt
+```
+
+system
+```
+./evcodes tables/registered-system-hut.csv 192.168.1.0 /dev/input/by-id/usb-Pimk_USB_Keyboard_Device_fedcba9876543210-event-kbd 3 > system-keymap.txt
 ```
 
 evcode of 240 means there is no mapping and should be removed from keymap file
