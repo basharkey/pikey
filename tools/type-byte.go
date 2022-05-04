@@ -29,9 +29,9 @@ func main () {
 
     if report_byte == 1 {
         type_bytes(gadget_device, []byte{byte(report_byte), 0, 0, byte(key_byte1), 0, 0, 0, 0, 0})
-    } else if report_byte == 2 {
+    } else if report_byte >= 2 {
         if key_byte1 > 255 {
-            bs := make([]byte, 2)
+            bs := make([]byte, report_byte)
             binary.LittleEndian.PutUint16(bs, uint16(key_byte1))
             type_bytes(gadget_device, []byte{byte(report_byte), byte(bs[0]), byte(bs[1])})
         } else {
