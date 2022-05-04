@@ -40,6 +40,35 @@ func Initialize() {
         {filepath.Join(functions_dir, "report_desc"),
             // fix keyboard descriptor packet isnt 9 bytes like it should be
             // maybe steal tmk one for more than 6k rollover
+            //"\x05\x01" +
+            //"\x09\x06" +
+            //"\xa1\x01" +
+            //"\x05\x07" +
+            //"\x19\xe0" +
+            //"\x29\xe7" +
+            //"\x15\x00" +
+            //"\x25\x01" +
+            //"\x95\x08" +
+            //"\x75\x01" +
+            //"\x81\x02" +
+            //"\x05\x08" +
+            //"\x19\x01" +
+            //"\x29\x05" +
+            //"\x95\x05" +
+            //"\x75\x01" +
+            //"\x91\x02" +
+            //"\x95\x01" +
+            //"\x75\x03" +
+            //"\x91\x01" +
+            //"\x05\x07" +
+            //"\x19\x00" +
+            //"\x29\xf7" +
+            //"\x15\x00" +
+            //"\x25\x01" +
+            //"\x95\xf8" +
+            //"\x75\x01" +
+            //"\x81\x02" +
+            //"\xc0" +
             "\x05\x01" + // Usage Page (Desktop)
             "\x09\x06" + // Usage (Keyboard)
             "\xa1\x01" + // Collection (Application)
@@ -67,12 +96,13 @@ func Initialize() {
             "\x95\x06" + // Report Count (6)
             "\x75\x08" + // Report Size (8)
             "\x15\x00" + // Logical Minimum (0)
-            "\x25\x73" + // Logical Maximum (115)
+            "\x25\x01" + // Logical Maximum (01)
             "\x05\x07" + // Usage Page (Keyboard)
             "\x19\x00" + // Usage Minimum (None)
-            "\x29\x73" + // Usage Maximum (KB F24)
+            "\x29\xf7" + // Usage Maximum (f7h)
             "\x81\x00" + // Input
             "\xc0" + // End Collection
+
             "\x05\x0c" + // Usage Page (Consumer)
             "\x09\x01" + // Usage (Consumer Control)
             "\xa1\x01" + // Collection (Application)
@@ -83,8 +113,21 @@ func Initialize() {
             "\x2a\x14\x05" + // Usage Maximum (514)
             "\x75\x10" + // Report Size (16)             num of bits per field
             "\x95\x01" + // Report Count (1)           num of fields
-            "\x81\x00" + // Input (Constant)
+            "\x81\x00" + // Input
             "\xc0"}, // End Collection
+
+            "\x05\x01" + // Usage Page (Desktop)
+            "\x09\x80" + // Usage (Sys Control)
+            "\xa1\x01" + // Collection (Application)
+            "\x85\x03" + // Report ID (3)
+            "\x16\x01\x00" + // Logical Minimum (1)
+            "\x26\x37\x00" + // Logical Maximum (55)
+            "\x1a\x81\x00" + // Usage Minimum (Sys Power Down)
+            "\x2a\xb7\x00" + // Usage Maximum (Sys Dspl LCD Autoscale)
+            "\x75\x10" + // Report Size (16)
+            "\x95\x01" + // Report Count (1)
+            "\x81\x00" + // Input
+            "\xC0"}, // End Collection
     }
 
     for _, file := range files {
