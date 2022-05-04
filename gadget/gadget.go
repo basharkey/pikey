@@ -38,61 +38,35 @@ func Initialize() {
         {filepath.Join(functions_dir, "report_length"), "8"},
         // sudo usbhid-dump -d beaf | tail -n +2 | xxd -r -p | hidrd-convert -o spec
         {filepath.Join(functions_dir, "report_desc"),
-            // fix keyboard descriptor packet isnt 9 bytes like it should be
-            // maybe steal tmk one for more than 6k rollover
-            //"\x05\x01" +
-            //"\x09\x06" +
-            //"\xa1\x01" +
-            //"\x05\x07" +
-            //"\x19\xe0" +
-            //"\x29\xe7" +
-            //"\x15\x00" +
-            //"\x25\x01" +
-            //"\x95\x08" +
-            //"\x75\x01" +
-            //"\x81\x02" +
-            //"\x05\x08" +
-            //"\x19\x01" +
-            //"\x29\x05" +
-            //"\x95\x05" +
-            //"\x75\x01" +
-            //"\x91\x02" +
-            //"\x95\x01" +
-            //"\x75\x03" +
-            //"\x91\x01" +
-            //"\x05\x07" +
-            //"\x19\x00" +
-            //"\x29\xf7" +
-            //"\x15\x00" +
-            //"\x25\x01" +
-            //"\x95\xf8" +
-            //"\x75\x01" +
-            //"\x81\x02" +
-            //"\xc0" +
             "\x05\x01" + // Usage Page (Desktop)
             "\x09\x06" + // Usage (Keyboard)
             "\xa1\x01" + // Collection (Application)
             "\x85\x01" + // Report ID (1)
+            // modifier report byte
+            "\x75\x01" + // Report Size (1)
+            "\x95\x08" + // Report Count (8)
             "\x05\x07" + // Usage Page (Keyboard)
             "\x19\xe0" + // Usage Minimum (KB Leftcontrol)
             "\x29\xe7" + // Usage Maximum (KB Right GUI)
             "\x15\x00" + // Logical Minimum (0)
             "\x25\x01" + // Logical Maximum (1)
-            "\x75\x01" + // Report Size (1)
-            "\x95\x08" + // Report Count (8)
             "\x81\x02" + // Input (Variable)
+            // reserved byte
             "\x95\x01" + // Report Count (1)
             "\x75\x08" + // Report Size (8)
             "\x81\x03" + // Input (Constant, Variable)
+            // LED report 5 bits
             "\x95\x05" + // Report Count (5)
             "\x75\x01" + // Report Size (1)
             "\x05\x08" + // Usage Page (LED)
-            "\x19\x01" + // Usage Minimum (01h)
-            "\x29\x05" + // Usage Maximum (05h)
+            "\x19\x01" + // Usage Minimum (01)
+            "\x29\x05" + // Usage Maximum (05)
             "\x91\x02" + // Output (Variable)
+            // LED report padding 3 bits
             "\x95\x01" + // Report Count (1)
             "\x75\x03" + // Report Size (3)
             "\x91\x03" + // Output (Constant, Variable)
+            // key report byte
             "\x95\x06" + // Report Count (6)
             "\x75\x08" + // Report Size (8)
             "\x15\x00" + // Logical Minimum (0)
@@ -111,23 +85,25 @@ func Initialize() {
             "\x26\x14\x05" + // Logical Maximum (514)
             "\x1a\x01\x00" + // Usage Minimum (01)
             "\x2a\x14\x05" + // Usage Maximum (514)
-            "\x75\x10" + // Report Size (16)             num of bits per field
             "\x95\x01" + // Report Count (1)           num of fields
+            "\x75\x10" + // Report Size (16)             num of bits per field
             "\x81\x00" + // Input
             "\xc0"}, // End Collection
 
+            /* probably not useful, does not provide many detectable functions
             "\x05\x01" + // Usage Page (Desktop)
             "\x09\x80" + // Usage (Sys Control)
             "\xa1\x01" + // Collection (Application)
             "\x85\x03" + // Report ID (3)
-            "\x16\x01\x00" + // Logical Minimum (1)
-            "\x26\x37\x00" + // Logical Maximum (55)
-            "\x1a\x81\x00" + // Usage Minimum (Sys Power Down)
-            "\x2a\xb7\x00" + // Usage Maximum (Sys Dspl LCD Autoscale)
+            "\x16\x01\x00" + // Logical Minimum (01)
+            "\x26\xe2\x00" + // Logical Maximum (55)
+            "\x1a\x01\x00" + // Usage Minimum (Sys Power Down)
+            "\x2a\xe2\x00" + // Usage Maximum (Sys Dspl LCD Autoscale)
             "\x75\x10" + // Report Size (16)
             "\x95\x01" + // Report Count (1)
             "\x81\x00" + // Input
             "\xC0"}, // End Collection
+            */
     }
 
     for _, file := range files {
@@ -152,18 +128,24 @@ func Destroy() {
     cmd := exec.Command("/usr/bin/env", "bash", "-c", "echo '' > " + filepath.Join(base_dir, "UDC"))
     cmd.Run()
 
-    // remove strings from configs
-    os.Remove(filepath.Join(base_dir, configs_dir, strings_dir))
-    // remove functions from configs
-    os.Remove(filepath.Join(base_dir, configs_dir, usb_device))
-    // remove configs
-    os.Remove(filepath.Join(base_dir, configs_dir))
-    // remove functions
-    os.Remove(filepath.Join(base_dir, functions_dir))
-    // remove strings
-    os.Remove(filepath.Join(base_dir, strings_dir))
-    // remove gadget
-    os.Remove(base_dir)
+    var gadget_files =  []string {
+        // remove strings from configs
+        filepath.Join(base_dir, configs_dir, strings_dir),
+        // remove functions from configs
+        filepath.Join(base_dir, configs_dir, usb_device),
+        // remove configs
+        filepath.Join(base_dir, configs_dir),
+        // remove functions
+        filepath.Join(base_dir, functions_dir),
+        // remove strings
+        filepath.Join(base_dir, strings_dir),
+        // remove gadget
+        base_dir,
+    }
+
+    for _, file := range gadget_files {
+        os.Remove(file)
+    }
 }
 
 func check_err(err error) {
