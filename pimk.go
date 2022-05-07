@@ -12,6 +12,7 @@ import (
     "time"
     "path/filepath"
     "errors"
+    "encoding/binary"
 )
 
 type Keystate struct {
@@ -124,7 +125,7 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
     fmt.Println(keyboard_device)
     fmt.Println(layerbinds)
     fmt.Println(keybinds)
-    for key, value := range rebinds[0].Modifiers {
+    for key, value := range rebinds[0].Mods {
         fmt.Println(key, value)
     }
 
@@ -155,6 +156,7 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
             key_code := event.Code
             key_state := event.Value
 
+            fmt.Println(event)
             if key_type != 0 && key_type != 4 && key_type != 17 {
                 if key_state == 1 {
                     // TODO dont add keys if 6 are currently pressed
@@ -168,12 +170,15 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
                     pressed_layerbinds, layer = detect_layerbinds(&pressed_keys, pressed_layerbinds, layerbinds[layer], layer)
                     pressed_keybinds = detect_keybinds(&pressed_keys, pressed_keybinds, keybinds[layer])
 
-                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer]))
+                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer])[0])
+                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer])[1])
                 } else if key_state == 2 {
                     pressed_layerbinds, layer = detect_layerbinds(&pressed_keys, pressed_layerbinds, layerbinds[layer], layer)
                     pressed_keybinds = detect_keybinds(&pressed_keys, pressed_keybinds, keybinds[layer])
 
-                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer]))
+                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer])[0])
+                    type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer])[1])
+                } else if key_state == 2 {
                 } else {
                     // remove released key from pressed_keys
                     for i, key := range pressed_keys {
@@ -188,9 +193,11 @@ func hook_keyboard(keyboard_device *evdev.InputDevice, keyboard_config string, g
                     // if no keys pressed clear buffer
                     if len(pressed_keys) == 0 {
                         type_bytes(gadget_device, []byte{1, 0, 0, 0, 0, 0, 0, 0, 0})
+                        type_bytes(gadget_device, []byte{2, 0, 0})
                     // else update with currently pressed keys
                     } else {
-                        type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer]))
+                        type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer])[0])
+                        type_bytes(gadget_device, keys_to_bytes(&pressed_keys, rebinds[layer])[1])
                         for _, bind_input_key := range index_bind_input_keys {
                             for i, key := range pressed_keys {
                                 if bind_input_key == key.Code {
@@ -241,9 +248,9 @@ func get_keyboard_paths() ([]string, error)  {
 }
 
 func keycode_equals_bindkey(keycode uint16, bind_input_key uint16) bool {
-    if multicode_mod, ok := keymap.Multicode_modifiers[bind_input_key]; ok {
+    if multicode_mod, ok := keymap.Multi_mods[bind_input_key]; ok {
         // check that keycode is equal to either the left or right Modifier keycodes
-        if keycode == multicode_mod.Leftkey || keycode == multicode_mod.Rightkey {
+        if keycode == multicode_mod.Left_code || keycode == multicode_mod.Right_code {
             return true
         }
     } else if keycode == bind_input_key {
@@ -464,7 +471,7 @@ func prepend_byte(x []byte, y byte) []byte {
     return x
 }
 
-func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
+func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) [][]byte {
     /*
     key_bytes slice
     [1, 0, 42, 35, 78, 0, 0, 0]
@@ -475,6 +482,7 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
 
     var key_bytes []byte
     var pressed_mods []byte
+    var  consumer_bytes = make([]byte, 2)
 
     for _, key := range *pressed_keys {
         // remove keys with state of false
@@ -483,19 +491,25 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
             if key.Keybind {
                 // check if key is key and not a modifier
                 if _, ok := keymap.Keys[key.Code]; ok {
-                    key_bytes = append(key_bytes, keymap.Keys[key.Code].Scancode)
-                } else if _, ok := keymap.Modifiers[key.Code]; ok {
-                    // add modifiers in pressed keys to pressed_mods
-                    pressed_mods = append(pressed_mods, keymap.Modifiers[key.Code].Scancode)
+                    key_bytes = append(key_bytes, byte(keymap.Keys[key.Code].Code))
+                } else if _, ok := keymap.Mods[key.Code]; ok {
+                    // add mods in pressed keys to pressed_mods
+                    pressed_mods = append(pressed_mods, byte(keymap.Mods[key.Code].Code))
+                // 1 key rollover ignore other consumer pressed keys
+                } else if _, ok := keymap.Consumer_keys[key.Code]; ok && consumer_bytes[0] == 0 && consumer_bytes[1] == 0 {
+                    binary.LittleEndian.PutUint16(consumer_bytes, uint16(keymap.Consumer_keys[key.Code].Code))
                 }
             // if key is not apart of a keybind use rebinds keymap
             } else {
                 // check if key is key and not a modifier
                 if _, ok := rebinds.Keys[key.Code]; ok {
-                    key_bytes = append(key_bytes, rebinds.Keys[key.Code].Scancode)
-                } else if _, ok := rebinds.Modifiers[key.Code]; ok {
-                    // add modifiers in pressed keys to pressed_mods
-                    pressed_mods = append(pressed_mods, rebinds.Modifiers[key.Code].Scancode)
+                    key_bytes = append(key_bytes, byte(rebinds.Keys[key.Code].Code))
+                } else if _, ok := rebinds.Mods[key.Code]; ok {
+                    // add mods in pressed keys to pressed_mods
+                    pressed_mods = append(pressed_mods, byte(rebinds.Mods[key.Code].Code))
+                // 1 key rollover ignore other consumer pressed keys
+                } else if _, ok := rebinds.Consumer_keys[key.Code]; ok && consumer_bytes[0] == 0 && consumer_bytes[1] == 0 {
+                    binary.LittleEndian.PutUint16(consumer_bytes, uint16(rebinds.Consumer_keys[key.Code].Code))
                 }
             }
         }
@@ -518,12 +532,15 @@ func keys_to_bytes(pressed_keys *[]Keystate, rebinds config.Rebind) []byte {
         key_bytes = prepend_byte(key_bytes, 0)
     }
 
-    // prepend report ID byte for device 1
+    // prepend report ID byte for keyboard device
     key_bytes = prepend_byte(key_bytes, 1)
+    // prepend report ID byte for consumer device
+    consumer_bytes = prepend_byte(consumer_bytes, 2)
 
     // pad remaining space with null bytes
     key_bytes = append(key_bytes, make([]byte, 9-len(key_bytes))...)
-    return key_bytes
+    consumer_bytes = append(consumer_bytes, make([]byte, 3-len(consumer_bytes))...)
+    return [][]byte{key_bytes, consumer_bytes}
 }
 
 func check_err(err error) {

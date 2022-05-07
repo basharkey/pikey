@@ -1,30 +1,26 @@
 package keymap
 
 type Key struct {
-    Scancode byte
-    Keyname string
+    // 2 bytes allows storing a keyboard or consumer event code
+    Code uint16
+    Name string
 }
 
-type Consumer_key struct {
-    Scancode uint16
-    Keyname string
+type Multi_mod struct {
+    Left_code uint16
+    Right_code uint16
+    Mutli_code byte
+    Name string
 }
 
-type Multi_mod_key struct {
-    Leftkey uint16
-    Rightkey uint16
-    Scancode byte
-    Keyname string
-}
-
-var Multicode_modifiers = map[uint16]Multi_mod_key {
+var Multi_mods = map[uint16]Multi_mod {
     1029: {29, 97, 1, "CTRL"},
     1042: {42, 54, 2, "SHIFT"},
     1056: {56, 100, 4, "ALT"},
     1125: {125, 126, 8, "META"},
 }
 
-var Modifiers = map[uint16]Key {
+var Mods = map[uint16]Key {
     29: {1, "LEFT_CTRL"},
     42: {2, "LEFT_SHIFT"},
     56: {4, "LEFT_ALT"},
@@ -134,7 +130,7 @@ var Keys = map[uint16]Key {
     83: {99, "KP_DOT"},
     86: {100, "NON_US_BACKSLASH"},
     127: {101, "APPLICATION"},
-    116: {102, "POWER"},
+    //116: {102, "POWER"},
     117: {103, "KP_EQUAL"},
     183: {104, "F13"},
     184: {105, "F14"},
@@ -150,66 +146,17 @@ var Keys = map[uint16]Key {
     194: {115, "F24"},
 }
 
-var Consumer_keys = map[uint16]Consumer_key {
+var Consumer_keys = map[uint16]Key {
     116: {48, "POWER"},
     408: {49, "RESET"},
     142: {50, "SLEEP"},
-    //142: {52, "SLEEP_MODE"},
-    //228: {53, "ILLUMINATION"},
-    256: {54, "FUNCTION_BUTTONS"},
-    139: {64, "MENU"},
-    353: {65, "MENU_PICK"},
-    103: {66, "MENU_UP"},
-    108: {67, "MENU_DOWN"},
-    105: {68, "MENU_LEFT"},
-    106: {69, "MENU_RIGHT"},
-    1: {70, "MENU_ESCAPE"},
-    78: {71, "MENU_VALUE_INCREASE"},
-    74: {72, "MENU_VALUE_DECREASE"},
-    //358: {96, "DATA_ON_SCREEN"},
-    370: {97, "CLOSED_CAPTION"},
-    //379: {99, "VCR_TV"},
-    212: {101, "SNAPSHOT"},
-    398: {105, "RED_MENU_BUTTON"},
-    399: {106, "GREEN_MENU_BUTTON"},
-    401: {107, "BLUE_MENU_BUTTON"},
-    400: {108, "YELLOW_MENU_BUTTON"},
-    375: {109, "ASPECT"},
     225: {111, "DISPLAY_BRIGHTNESS_INCREMENT"},
     224: {112, "DISPLAY_BRIGHTNESS_DECREMENT"},
     431: {114, "DISPLAY_BACKLIGHT_TOGGLE"},
     592: {115, "DISPLAY_SET_BRIGHTNESS_TO_MINIMUM"},
     593: {116, "DISPLAY_SET_BRIGHTNESS_TO_MAXIMUM"},
     244: {117, "DISPLAY_SET_AUTO_BRIGHTNESS"},
-    230: {121, "KB_BRIGHTNESS_INCREMENT"},
-    229: {122, "KB_BRIGHTNESS_DECREMENT"},
-    228: {124, "KB_BACKLIGHT_OOC"},
-    241: {130, "MODE_STEP"},
-    405: {131, "RECALL_LAST"},
-    28: {132, "ENTER_CHANNEL"},
-    376: {136, "MEDIA_SELECT_COMPUTER"},
-    377: {137, "MEDIA_SELECT_TV"},
-    150: {138, "MEDIA_SELECT_WWW"},
-    389: {139, "MEDIA_SELECT_DVD"},
-    169: {140, "MEDIA_SELECT_TELEPHONE"},
-    362: {141, "MEDIA_SELECT_PROGRAM_GUIDE"},
-    416: {142, "MEDIA_SELECT_VIDEO_PHONE"},
-    417: {143, "MEDIA_SELECT_GAMES"},
-    396: {144, "MEDIA_SELECT_MESSAGES"},
-    383: {145, "MEDIA_SELECT_CD"},
-    379: {146, "MEDIA_SELECT_VCR"},
-    386: {147, "MEDIA_SELECT_TUNER"},
-    174: {148, "QUIT"},
-    138: {149, "HELP"},
-    384: {150, "MEDIA_SELECT_TAPE"},
-    378: {151, "MEDIA_SELECT_CABLE"},
-    381: {152, "MEDIA_SELECT_SATELLITE"},
-    366: {154, "MEDIA_SELECT_HOME"},
-    402: {156, "CHANNEL_INCREMENT"},
-    403: {157, "CHANNEL_DECREMENT"},
-    380: {160, "VCR_PLUS"},
     207: {176, "PLAY"},
-    119: {177, "PAUSE"},
     167: {178, "RECORD"},
     208: {179, "FAST_FORWARD"},
     168: {180, "REWIND"},
@@ -217,21 +164,11 @@ var Consumer_keys = map[uint16]Consumer_key {
     165: {182, "SCAN_PREVIOUS_TRACK"},
     166: {183, "STOP"},
     161: {184, "EJECT"},
-    410: {185, "RANDOM_PLAY"},
-    439: {188, "REPEAT"},
-    409: {191, "SLOW_TRACKING"},
     164: {205, "PLAY_PAUSE"},
-    582: {207, "VOICE_COMM"},
-    585: {217, "INVOKE_DISMISS_EMOJI_PICKER"},
-    32: {224, "VOLUME"},
+    410: {185, "RANDOM_PLAY"},
     113: {226, "MUTE"},
-    209: {229, "BASS_BOOST"},
     115: {233, "VOLUME_INCREMENT"},
     114: {234, "VOLUME_DECREMENT"},
-    //409: {245, "SLOW"},
-    576: {385, "AL_LAUNCH_BUTTON_CONFIGURATION_TOOL"},
-    //156: {386, "AL_PROGRAMMABLE_BUTTON_CONFIGURATION"},
-    171: {387, "AL_CONSUMER_CONTROL_CONFIGURATION"},
     421: {388, "AL_WORD_PROCESSOR"},
     422: {389, "AL_TEXT_EDITOR"},
     423: {390, "AL_SPREADSHEET"},
@@ -248,8 +185,8 @@ var Consumer_keys = map[uint16]Consumer_key {
     219: {401, "AL_CHECKBOOK_FINANCE"},
     140: {402, "AL_CALCULATOR"},
     387: {403, "AL_AV_CAPTURE_PLAYBACK"},
-    //144: {404, "AL_LOCAL_MACHINE_BROWSER"},
-    //150: {406, "AL_INTERNET_BROWSER"},
+    144: {404, "AL_LOCAL_MACHINE_BROWSER"},
+    150: {406, "AL_INTERNET_BROWSER"},
     216: {409, "AL_NETWORK_CHAT"},
     433: {412, "AL_LOGOFF"},
     152: {414, "AL_TERMINAL_LOCK_SCREENSAVER"},
@@ -257,12 +194,12 @@ var Consumer_keys = map[uint16]Consumer_key {
     580: {418, "AL_SELECT_TASK_APPLICATION"},
     407: {419, "AL_NEXT_TASK_APPLICATION"},
     412: {420, "AL_PREVIOUS_TASK_APPLICATION"},
-    //138: {422, "AL_INTEGRATED_HELP_CENTER"},
+    138: {422, "AL_INTEGRATED_HELP_CENTER"},
     235: {423, "AL_DOCUMENTS"},
     432: {427, "AL_SPELL_CHECK"},
     374: {430, "AL_KB_LAYOUT"},
     581: {433, "AL_SCREEN_SAVER"},
-    144: {436, "AL_FILE_BROWSER"},
+    //144: {436, "AL_FILE_BROWSER"},
     442: {438, "AL_IMAGE_BROWSER"},
     392: {439, "AL_AUDIO_BROWSER"},
     393: {440, "AL_MOVIE_BROWSER"},
@@ -272,7 +209,7 @@ var Consumer_keys = map[uint16]Consumer_key {
     181: {513, "AC_NEW"},
     134: {514, "AC_OPEN"},
     206: {515, "AC_CLOSE"},
-    //174: {516, "AC_EXIT"},
+    174: {516, "AC_EXIT"},
     234: {519, "AC_SAVE"},
     210: {520, "AC_PRINT"},
     130: {521, "AC_PROPERTIES"},
@@ -295,21 +232,12 @@ var Consumer_keys = map[uint16]Consumer_key {
     372: {562, "AC_VIEW_TOGGLE"},
     177: {563, "AC_SCROLL_UP"},
     178: {564, "AC_SCROLL_DOWN"},
-    6: {568, "AC_PAN"},
     176: {573, "AC_EDIT"},
     223: {607, "AC_CANCEL"},
-    110: {617, "AC_INSERT_MODE"},
-    111: {618, "AC_DELETE"},
     182: {633, "AC_REDO_REPEAT"},
     232: {649, "AC_REPLY"},
     233: {651, "AC_FORWARD_MSG"},
     231: {652, "AC_SEND"},
     584: {669, "AC_NEXT_KB_LAYOUT_SELECT"},
     120: {671, "AC_DESKTOP_SHOW_ALL_WINDOWS"},
-    608: {711, "KB_INPUT_ASSIST_PREVIOUS"},
-    609: {712, "KB_INPUT_ASSIST_NEXT"},
-    610: {713, "KB_INPUT_ASSIST_PREVIOUS_GROUP"},
-    611: {714, "KB_INPUT_ASSIST_NEXT_GROUP"},
-    612: {715, "KB_INPUT_ASSIST_ACCEPT"},
-    613: {716, "KB_INPUT_ASSIST_CANCEL"},
 }

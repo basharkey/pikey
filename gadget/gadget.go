@@ -70,10 +70,10 @@ func Initialize() {
             "\x95\x06" + // Report Count (6)
             "\x75\x08" + // Report Size (8)
             "\x15\x00" + // Logical Minimum (0)
-            "\x25\x01" + // Logical Maximum (01)
+            "\x25\xff" + // Logical Maximum (255)
             "\x05\x07" + // Usage Page (Keyboard)
             "\x19\x00" + // Usage Minimum (None)
-            "\x29\xf7" + // Usage Maximum (f7h)
+            "\x29\xff" + // Usage Maximum (255)
             "\x81\x00" + // Input
             "\xc0" + // End Collection
 

@@ -38,3 +38,10 @@
 - [ ] Create automatic tests for errors/output key inconsistencies
 - [ ] Potentially create seperate config for single key rebinds in keymap.go
 - [ ] Auto mount USB drive to config location for config editing without networking
+
+consumer devices don't show up under /dev/input/by-id
+will have to develop new way to hook consumer devices and keyboards
+
+hook consumer devices and capture input
+
+send consumer device packets
