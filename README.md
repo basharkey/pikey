@@ -26,6 +26,7 @@ As a result I do NOT recommend having your Pi connected to your network as this 
 git clone https://github.com/basharkey/pimk.git
 sudo apt install -y ansible
 cd pimk/
+ansible-playbook main.yml
 ```
 
 ## Configuration
