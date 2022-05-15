@@ -73,7 +73,7 @@ func main() {
     for {
         // I don't think this will ever error for no keyboards being plugged in
         // errors would probably be related to permissions issues
-        keyboard_paths, err := get_keyboard_paths()
+        keyboard_paths, err := get_keyboard_paths("/dev/input/by-id/")
         if err != nil {
             fmt.Println(err)
         } else {
@@ -226,25 +226,24 @@ func contains_key(key_code uint16, pressed_keys *[]Keystate) bool {
     return false
 }
 
-func get_keyboard_paths() ([]string, error)  {
-    dev_path := "/dev/input/by-id/"
-    dir, err := os.Open(dev_path)
+func get_keyboard_paths(base_path string) ([]string, error)  {
+    dir, err := os.Open(base_path)
     if err != nil {
         return nil, err
     }
+
     devices, err := dir.Readdir(0)
     if err != nil {
         return nil, err
     }
 
-    var keyboards []string
-    for i := range devices {
-        device := devices[i].Name()
-        if strings.Contains(device, "event-kbd") && !strings.Contains(device, "if01") {
-            keyboards = append(keyboards, dev_path + device)
+    var keyboard_paths []string
+    for _, device := range devices {
+        if strings.Contains(device.Name(), "event-kbd") || strings.Contains(device.Name(), "event-if") {
+            keyboard_paths = append(keyboard_paths, base_path + device.Name())
         }
     }
-    return keyboards, nil
+    return keyboard_paths, nil
 }
 
 func keycode_equals_bindkey(keycode uint16, bind_input_key uint16) bool {
@@ -313,12 +312,12 @@ func detect_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
                     }
                 }
             }
-            if layerbind.Type == "tap" {
+            if layerbind.Type == "TAP" {
                 layer = layerbind.To_layer
-            } else if layerbind.Type == "momentary"{
+            } else if layerbind.Type == "MOMENTARY"{
                 layer = layerbind.To_layer
                 pressed_layerbinds = append(pressed_layerbinds, layerbind)
-            } else if layerbind.Type == "toggle"{
+            } else if layerbind.Type == "TOGGLE"{
                 for i, pressed_layerbind := range pressed_layerbinds {
                     if check_opposite_toggle_layerbinds(layerbind, pressed_layerbind) {
                         if pressed_layerbind.State == 2 {
@@ -330,7 +329,7 @@ func detect_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
                 layer = layerbind.To_layer
                 layerbind.State = 1
                 pressed_layerbinds = append(pressed_layerbinds, layerbind)
-            } else if layerbind.Type == "oneshot"{
+            } else if layerbind.Type == "ONESHOT"{
                 layer = layerbind.To_layer
                 layerbind.State = 1
                 pressed_layerbinds = append(pressed_layerbinds, layerbind)
