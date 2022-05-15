@@ -52,4 +52,4 @@ sudo systemctl stop pimk
 ```
 
 
-For more information on creating config files see the [Wiki](https://github.com/basharkey/pimk/wiki)
+For more information on creating config files see the [Wiki](https://github.com/basharkey/pimk/wiki/Config)
