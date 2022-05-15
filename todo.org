@@ -16,6 +16,7 @@
 - [-] higher keymap keys not working (eg. f13, playpause) this has to do with the USB device HID spec
   - [X] f13-f24
   - [ ] playpause, multimedia keys (may require another HID device)
+    - [ ] implement device 2 (report id 2)
 - [X] scroll lock presses "1"s after initial press
 - [X] Holding down multi key keybind and then pressing the output key causes crash
 - [X] When holding down mutli key keybind and then tapping another key it outputs both the keybind output key(s) and the key you tapped (this should only output the key you tapped)
@@ -37,3 +38,10 @@
 - [ ] Create automatic tests for errors/output key inconsistencies
 - [ ] Potentially create seperate config for single key rebinds in keymap.go
 - [ ] Auto mount USB drive to config location for config editing without networking
+
+consumer devices don't show up under /dev/input/by-id
+will have to develop new way to hook consumer devices and keyboards
+
+hook consumer devices and capture input
+
+send consumer device packets

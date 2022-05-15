@@ -10,13 +10,11 @@ import (
     "log"
 )
 
-type Layerbind struct {
-    Input_keys []uint16
-    To_layer int
-    From_layer int
-    Suppress bool
-    State int
-    Type string
+type Rebind struct {
+    Multi_mods map[uint16]keymap.Multi_mod
+    Mods map[uint16]keymap.Key
+    Keys map[uint16]keymap.Key
+    Consumer_keys map[uint16]keymap.Key
 }
 
 type Keybind struct {
@@ -24,10 +22,13 @@ type Keybind struct {
     Output_keys []uint16
 }
 
-type Rebind struct {
-    Multicode_modifiers map[uint16]keymap.Multi_mod_key
-    Modifiers map[uint16]keymap.Key
-    Keys map[uint16]keymap.Key
+type Layerbind struct {
+    Input_keys []uint16
+    To_layer int
+    From_layer int
+    Suppress bool
+    State int
+    Type string
 }
 
 type Layer struct {
@@ -50,18 +51,22 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
     var keybinds [][]Keybind
     for i, layer := range layers {
         layer_rebinds := new(Rebind)
-        layer_rebinds.Multicode_modifiers = make(map[uint16]keymap.Multi_mod_key)
-        layer_rebinds.Modifiers = make(map[uint16]keymap.Key)
+        layer_rebinds.Multi_mods = make(map[uint16]keymap.Multi_mod)
+        layer_rebinds.Mods = make(map[uint16]keymap.Key)
         layer_rebinds.Keys = make(map[uint16]keymap.Key)
+        layer_rebinds.Consumer_keys = make(map[uint16]keymap.Key)
 
-        for key, value := range keymap.Multicode_modifiers {
-            layer_rebinds.Multicode_modifiers[key] = value
+        for key, value := range keymap.Multi_mods {
+            layer_rebinds.Multi_mods[key] = value
         }
-        for key, value := range keymap.Modifiers {
-            layer_rebinds.Modifiers[key] = value
+        for key, value := range keymap.Mods {
+            layer_rebinds.Mods[key] = value
         }
         for key, value := range keymap.Keys {
             layer_rebinds.Keys[key] = value
+        }
+        for key, value := range keymap.Consumer_keys {
+            layer_rebinds.Consumer_keys[key] = value
         }
 
         for _, rebind := range layer.Rebinds {
@@ -103,8 +108,8 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
             var bind_output_keys []uint16
             for _, bind_output_key := range keybind[1] {
                 keycode := keyname_to_keycode(bind_output_key)
-                if multi_mod, ok := keymap.Multicode_modifiers[keycode]; ok {
-                    keycode = multi_mod.Leftkey
+                if multi_mod, ok := keymap.Multi_mods[keycode]; ok {
+                    keycode = multi_mod.Left_code
                 }
 
                 bind_output_keys = append(bind_output_keys, keycode)
@@ -120,13 +125,15 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
     return rebinds, layerbinds, keybinds
 }
 
-func keycode_to_keytype(keycode uint16) (string, error) {
-    if _, ok := keymap.Multicode_modifiers[keycode]; ok {
+func keycode_to_keytype(code uint16) (string, error) {
+    if _, ok := keymap.Multi_mods[code]; ok {
         return "multicode_mod", nil
-    } else if _, ok := keymap.Modifiers[keycode]; ok {
+    } else if _, ok := keymap.Mods[code]; ok {
         return "mod", nil
-    } else if _, ok := keymap.Keys[keycode]; ok {
+    } else if _, ok := keymap.Keys[code]; ok {
         return "key", nil
+    } else if _, ok := keymap.Consumer_keys[code]; ok {
+        return "consumer_key", nil
     }
     return "", errors.New("keycode not in keymap")
 }
@@ -143,84 +150,107 @@ func rebind_key(layer_rebinds *Rebind, input_keycode uint16, output_keycode uint
     }
 
     if input_keytype == "multicode_mod" {
-        input_keystruct := keymap.Multicode_modifiers[input_keycode]
+        input_keystruct := keymap.Multi_mods[input_keycode]
 
         if output_keytype == "multicode_mod" {
-            output_keystruct := keymap.Multicode_modifiers[output_keycode]
-            layer_rebinds.Modifiers[input_keystruct.Leftkey] = keymap.Key{
-                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
-                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+            output_keystruct := keymap.Multi_mods[output_keycode]
+            layer_rebinds.Mods[input_keystruct.Left_code] = keymap.Key{
+                Code: keymap.Mods[output_keystruct.Left_code].Code,
+                Name: keymap.Mods[output_keystruct.Left_code].Name}
 
-            layer_rebinds.Modifiers[input_keystruct.Rightkey] = keymap.Key{
-                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
-                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+            layer_rebinds.Mods[input_keystruct.Right_code] = keymap.Key{
+                Code: keymap.Mods[output_keystruct.Left_code].Code,
+                Name: keymap.Mods[output_keystruct.Left_code].Name}
 
         } else if output_keytype == "mod" {
-            output_keystruct := keymap.Modifiers[output_keycode]
-            layer_rebinds.Modifiers[input_keystruct.Leftkey] = output_keystruct
-            layer_rebinds.Modifiers[input_keystruct.Rightkey] = output_keystruct
+            output_keystruct := keymap.Mods[output_keycode]
+            layer_rebinds.Mods[input_keystruct.Left_code] = output_keystruct
+            layer_rebinds.Mods[input_keystruct.Right_code] = output_keystruct
 
         } else if output_keytype == "key" {
             output_keystruct := keymap.Keys[output_keycode]
-            delete(layer_rebinds.Modifiers, input_keystruct.Leftkey)
-            delete(layer_rebinds.Modifiers, input_keystruct.Rightkey)
-            layer_rebinds.Keys[input_keystruct.Leftkey] = output_keystruct
-            layer_rebinds.Keys[input_keystruct.Rightkey] = output_keystruct
+            delete(layer_rebinds.Mods, input_keystruct.Left_code)
+            delete(layer_rebinds.Mods, input_keystruct.Right_code)
+            layer_rebinds.Keys[input_keystruct.Left_code] = output_keystruct
+            layer_rebinds.Keys[input_keystruct.Right_code] = output_keystruct
+
+        } else if output_keytype == "consumer_key" {
+            output_keystruct := keymap.Consumer_keys[output_keycode]
+            delete(layer_rebinds.Mods, input_keystruct.Left_code)
+            delete(layer_rebinds.Mods, input_keystruct.Right_code)
+            layer_rebinds.Consumer_keys[input_keystruct.Left_code] = output_keystruct
+            layer_rebinds.Consumer_keys[input_keystruct.Right_code] = output_keystruct
         }
 
     } else if input_keytype == "mod" {
         if output_keytype == "multicode_mod" {
-            output_keystruct := keymap.Multicode_modifiers[output_keycode]
-            layer_rebinds.Modifiers[input_keycode] = keymap.Key{
-                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
-                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+            output_keystruct := keymap.Multi_mods[output_keycode]
+            layer_rebinds.Mods[input_keycode] = keymap.Key{
+                Code: keymap.Mods[output_keystruct.Left_code].Code,
+                Name: keymap.Mods[output_keystruct.Left_code].Name}
 
         } else if output_keytype == "mod" {
-            output_keystruct := keymap.Modifiers[output_keycode]
-            layer_rebinds.Modifiers[input_keycode] = output_keystruct
+            output_keystruct := keymap.Mods[output_keycode]
+            layer_rebinds.Mods[input_keycode] = output_keystruct
 
         } else if output_keytype == "key" {
             output_keystruct := keymap.Keys[output_keycode]
-            delete(layer_rebinds.Modifiers, input_keycode)
+            delete(layer_rebinds.Mods, input_keycode)
             layer_rebinds.Keys[input_keycode] = output_keystruct
+
+        } else if output_keytype == "consumer_key" {
+            output_keystruct := keymap.Consumer_keys[output_keycode]
+            delete(layer_rebinds.Mods, input_keycode)
+            layer_rebinds.Consumer_keys[input_keycode] = output_keystruct
         }
 
     } else if input_keytype == "key" {
         if output_keytype == "multicode_mod" {
-            output_keystruct := keymap.Multicode_modifiers[output_keycode]
+            output_keystruct := keymap.Multi_mods[output_keycode]
             delete(layer_rebinds.Keys, input_keycode)
-            layer_rebinds.Modifiers[input_keycode] = keymap.Key{
-                Scancode: keymap.Modifiers[output_keystruct.Leftkey].Scancode,
-                Keyname: keymap.Modifiers[output_keystruct.Leftkey].Keyname}
+            layer_rebinds.Mods[input_keycode] = keymap.Key{
+                Code: keymap.Mods[output_keystruct.Left_code].Code,
+                Name: keymap.Mods[output_keystruct.Left_code].Name}
 
         } else if output_keytype == "mod" {
-            output_keystruct := keymap.Modifiers[output_keycode]
+            output_keystruct := keymap.Mods[output_keycode]
             delete(layer_rebinds.Keys, input_keycode)
-            layer_rebinds.Modifiers[input_keycode] = output_keystruct
+            layer_rebinds.Mods[input_keycode] = output_keystruct
 
         } else if output_keytype == "key" {
             output_keystruct := keymap.Keys[output_keycode]
             layer_rebinds.Keys[input_keycode] = output_keystruct
+
+        } else if output_keytype == "consumer_key" {
+            output_keystruct := keymap.Consumer_keys[output_keycode]
+            delete(layer_rebinds.Keys, input_keycode)
+            layer_rebinds.Consumer_keys[input_keycode] = output_keystruct
         }
     }
 }
 
-func keyname_to_keycode(keyname string) uint16 {
-    for keycode, key := range keymap.Multicode_modifiers {
-        if key.Keyname == keyname {
-            return keycode
+func keyname_to_keycode(name string) uint16 {
+    for code, key := range keymap.Multi_mods {
+        if key.Name == name {
+            return code
         }
     }
 
-    for keycode, key := range keymap.Modifiers {
-        if key.Keyname == keyname {
-            return keycode
+    for code, key := range keymap.Mods {
+        if key.Name == name {
+            return code
         }
     }
 
-    for keycode, key := range keymap.Keys {
-        if key.Keyname == keyname {
-            return keycode
+    for code, key := range keymap.Keys {
+        if key.Name == name {
+            return code
+        }
+    }
+
+    for code, key := range keymap.Consumer_keys {
+        if key.Name == name {
+            return code
         }
     }
     return 0
