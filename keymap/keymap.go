@@ -32,6 +32,7 @@ var Mods = map[uint16]Key {
 }
 
 var Keys = map[uint16]Key {
+    0: {0, "NONE"},
     1: {41, "ESCAPE"},
     2: {30, "1"},
     3: {31, "2"},

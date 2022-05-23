@@ -70,10 +70,32 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
         }
 
         for _, rebind := range layer.Rebinds {
-            rebind_input_keycode := keyname_to_keycode(rebind[0])
-            rebind_output_keycode := keyname_to_keycode(rebind[1])
+            // if ALL is used rebind all mods, keys, and consumer_keys
+            if rebind[0] == "ALL" {
+                for _, mod := range keymap.Mods {
+                    rebind_input_keycode := keyname_to_keycode(mod.Name)
+                    rebind_output_keycode := keyname_to_keycode(rebind[1])
 
-            rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
+                    rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
+                }
+                for _, key := range keymap.Keys {
+                    rebind_input_keycode := keyname_to_keycode(key.Name)
+                    rebind_output_keycode := keyname_to_keycode(rebind[1])
+
+                    rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
+                }
+                for _, consumer_key := range keymap.Consumer_keys {
+                    rebind_input_keycode := keyname_to_keycode(consumer_key.Name)
+                    rebind_output_keycode := keyname_to_keycode(rebind[1])
+
+                    rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
+                }
+            } else {
+                rebind_input_keycode := keyname_to_keycode(rebind[0])
+                rebind_output_keycode := keyname_to_keycode(rebind[1])
+
+                rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
+            }
         }
 
         var layer_layerbinds []Layerbind
