@@ -267,8 +267,8 @@ func detect_bind(pressed_keys []Keystate, bind_input_keys []uint16, is_layerbind
             }
         }
     }
-    // if all bind_input_keys are pressed return true
-    if num_pressed_bind_input_keys == len(bind_input_keys) {
+    // if all bind_input_keys are pressed, and pressed_keys only contains bind_input_keys, return true
+    if num_pressed_bind_input_keys == len(bind_input_keys) && num_pressed_bind_input_keys == len(pressed_keys) {
         return true
     }
     return false
