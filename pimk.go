@@ -343,13 +343,13 @@ func remove_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
     for {
         check_again := false
         for i, layerbind := range pressed_layerbinds {
-            if layerbind.Type == "momentary" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) && layer == layerbind.To_layer {
+            if layerbind.Type == "MOMENTARY" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) && layer == layerbind.To_layer {
                 pressed_layerbinds[i] = pressed_layerbinds[len(pressed_layerbinds)-1]
                 pressed_layerbinds = pressed_layerbinds[:len(pressed_layerbinds)-1]
                 layer = layerbind.From_layer
                 check_again = true
             }
-            if layerbind.Type == "toggle" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) {
+            if layerbind.Type == "TOGGLE" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) {
                 if layerbind.State == 1 {
                     pressed_layerbinds[i].State = 2
                 } else if layerbind.State == 3 {
@@ -359,7 +359,7 @@ func remove_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
                     check_again = true
                 }
             }
-            if layerbind.Type == "oneshot" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) && layer == layerbind.To_layer {
+            if layerbind.Type == "ONESHOT" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) && layer == layerbind.To_layer {
                 if layerbind.State == 1 {
                     pressed_layerbinds[i].State = 2
                 } else if layerbind.State == 2 {
