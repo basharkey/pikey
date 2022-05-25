@@ -282,17 +282,17 @@ func check_opposite_toggle_layerbinds(layerbind1 config.Layerbind, layerbind2 co
     if layerbind1.Type != layerbind2.Type {
         return false
     }
-    if layerbind1.To_layer != layerbind2.From_layer {
+    if layerbind1.Layer != layerbind2.FromLayer {
         return false
     }
-    if layerbind1.From_layer != layerbind2.To_layer {
+    if layerbind1.FromLayer != layerbind2.Layer {
         return false
     }
-    if len(layerbind1.Input_keys) != len(layerbind2.Input_keys) {
+    if len(layerbind1.InputKeyCodes) != len(layerbind2.InputKeyCodes) {
         return false
     }
-    for i := range layerbind1.Input_keys {
-        if layerbind1.Input_keys[i] != layerbind2.Input_keys[i] {
+    for i := range layerbind1.InputKeyCodes {
+        if layerbind1.InputKeyCodes[i] != layerbind2.InputKeyCodes[i] {
             return false
         }
     }
@@ -302,23 +302,23 @@ func check_opposite_toggle_layerbinds(layerbind1 config.Layerbind, layerbind2 co
 func detect_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Layerbind, layer_layerbinds []config.Layerbind, layer int) ([]config.Layerbind, int) {
     // detect newly pressed layerbinds
     for _, layerbind := range layer_layerbinds {
-        if detect_bind(*pressed_keys, layerbind.Input_keys, true) {
-            for _, bind_input_key := range layerbind.Input_keys {
+        if detect_bind(*pressed_keys, layerbind.InputKeyCodes, true) {
+            for _, bind_input_key := range layerbind.InputKeyCodes {
                 for i, key := range *pressed_keys {
                     if keycode_equals_bindkey(key.Code, bind_input_key) {
                         // tag layerbind input keys
                         (*pressed_keys)[i].Layerbind = true
                         // if layerbind suppression enabled set the input keys pressed state to false
-                        if layerbind.Suppress {
+                        if !layerbind.OutputInputKeys {
                             (*pressed_keys)[i].State = false
                         }
                     }
                 }
             }
             if layerbind.Type == "TAP" {
-                layer = layerbind.To_layer
+                layer = layerbind.Layer
             } else if layerbind.Type == "MOMENTARY"{
-                layer = layerbind.To_layer
+                layer = layerbind.Layer
                 pressed_layerbinds = append(pressed_layerbinds, layerbind)
             } else if layerbind.Type == "TOGGLE"{
                 for i, pressed_layerbind := range pressed_layerbinds {
@@ -329,11 +329,11 @@ func detect_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
                         return pressed_layerbinds, layer
                     }
                 }
-                layer = layerbind.To_layer
+                layer = layerbind.Layer
                 layerbind.State = 1
                 pressed_layerbinds = append(pressed_layerbinds, layerbind)
             } else if layerbind.Type == "ONESHOT"{
-                layer = layerbind.To_layer
+                layer = layerbind.Layer
                 layerbind.State = 1
                 pressed_layerbinds = append(pressed_layerbinds, layerbind)
             }
@@ -346,29 +346,29 @@ func remove_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
     for {
         check_again := false
         for i, layerbind := range pressed_layerbinds {
-            if layerbind.Type == "MOMENTARY" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) && layer == layerbind.To_layer {
+            if layerbind.Type == "MOMENTARY" && !detect_bind(*pressed_keys, layerbind.InputKeyCodes, true) && layer == layerbind.Layer {
                 pressed_layerbinds[i] = pressed_layerbinds[len(pressed_layerbinds)-1]
                 pressed_layerbinds = pressed_layerbinds[:len(pressed_layerbinds)-1]
-                layer = layerbind.From_layer
+                layer = layerbind.FromLayer
                 check_again = true
             }
-            if layerbind.Type == "TOGGLE" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) {
+            if layerbind.Type == "TOGGLE" && !detect_bind(*pressed_keys, layerbind.InputKeyCodes, true) {
                 if layerbind.State == 1 {
                     pressed_layerbinds[i].State = 2
                 } else if layerbind.State == 3 {
                     pressed_layerbinds[i] = pressed_layerbinds[len(pressed_layerbinds)-1]
                     pressed_layerbinds = pressed_layerbinds[:len(pressed_layerbinds)-1]
-                    layer = layerbind.From_layer
+                    layer = layerbind.FromLayer
                     check_again = true
                 }
             }
-            if layerbind.Type == "ONESHOT" && !detect_bind(*pressed_keys, layerbind.Input_keys, true) && layer == layerbind.To_layer {
+            if layerbind.Type == "ONESHOT" && !detect_bind(*pressed_keys, layerbind.InputKeyCodes, true) && layer == layerbind.Layer {
                 if layerbind.State == 1 {
                     pressed_layerbinds[i].State = 2
                 } else if layerbind.State == 2 {
                     pressed_layerbinds[i] = pressed_layerbinds[len(pressed_layerbinds)-1]
                     pressed_layerbinds = pressed_layerbinds[:len(pressed_layerbinds)-1]
-                    layer = layerbind.From_layer
+                    layer = layerbind.FromLayer
                     check_again = true
                 }
             }
@@ -382,14 +382,14 @@ func remove_layerbinds(pressed_keys *[]Keystate, pressed_layerbinds []config.Lay
 
 func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind, layer_keybinds []config.Keybind) []config.Keybind {
     for _, keybind := range layer_keybinds {
-        if detect_bind(*pressed_keys, keybind.Input_keys, false) {
+        if detect_bind(*pressed_keys, keybind.InputKeyCodes, false) {
             /*
             if all bind_input_keys for a keybind have been pressed:
                 add bind_output_keys to pressed keys
                 set bind_input_keys state to false
             */
             pressed_keybinds = append(pressed_keybinds, keybind)
-            for _, bind_input_key := range keybind.Input_keys {
+            for _, bind_input_key := range keybind.InputKeyCodes {
                 for i, key := range *pressed_keys{
                     if keycode_equals_bindkey(key.Code, bind_input_key) {
                         (*pressed_keys)[i].State = false
@@ -397,7 +397,7 @@ func detect_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
                 }
             }
 
-            for _, bind_output_key := range keybind.Output_keys {
+            for _, bind_output_key := range keybind.OutputKeyCodes {
                 found := false
                 for i, key := range *pressed_keys {
                     // don't true layerbind input keys
@@ -421,9 +421,9 @@ func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
     var index_bind_input_keys []uint16
 
     for i, keybind := range pressed_keybinds {
-        num_bind_input_keys := len(keybind.Input_keys)
+        num_bind_input_keys := len(keybind.InputKeyCodes)
         num_pressed_bind_input_keys := 0
-        for _, bind_input_key := range keybind.Input_keys {
+        for _, bind_input_key := range keybind.InputKeyCodes {
             for _, key := range *pressed_keys {
                 if keycode_equals_bindkey(key.Code, bind_input_key) {
                     num_pressed_bind_input_keys += 1
@@ -435,7 +435,7 @@ func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
             pressed_keybinds[i] = pressed_keybinds[len(pressed_keybinds)-1]
             pressed_keybinds = pressed_keybinds[:len(pressed_keybinds)-1]
 
-            for _, bind_output_key := range keybind.Output_keys {
+            for _, bind_output_key := range keybind.OutputKeyCodes {
                 for i, key := range *pressed_keys {
                     if bind_output_key == key.Code {
                         (*pressed_keys)[i] = (*pressed_keys)[len(*pressed_keys)-1]
@@ -445,7 +445,7 @@ func remove_keybinds(pressed_keys *[]Keystate, pressed_keybinds []config.Keybind
                 }
             }
 
-            for _, bind_input_key := range keybind.Input_keys {
+            for _, bind_input_key := range keybind.InputKeyCodes {
                 for _, key := range *pressed_keys {
                     if keycode_equals_bindkey(key.Code, bind_input_key) {
                         index_bind_input_keys = append(index_bind_input_keys, key.Code)

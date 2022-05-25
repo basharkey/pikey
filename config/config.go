@@ -5,7 +5,7 @@ import (
     "fmt"
     "encoding/json"
     "io/ioutil"
-    "strconv"
+    //"strconv"
     "errors"
     "log"
 )
@@ -18,23 +18,38 @@ type Rebind struct {
 }
 
 type Keybind struct {
-    Input_keys []uint16
-    Output_keys []uint16
+    InputKeys []string
+    InputKeyCodes []uint16
+    OutputKeys []string
+    OutputKeyCodes []uint16
 }
 
 type Layerbind struct {
-    Input_keys []uint16
-    To_layer int
-    From_layer int
-    Suppress bool
-    State int
+    InputKeys []string
+    InputKeyCodes []uint16
+    Layer int
+    FromLayer int
     Type string
+    OutputInputKeys bool
+    State int
+}
+
+type MacroCmd struct {
+    Type string
+    Params []string
+}
+
+type Macro struct {
+    InputKeys []string
+    InputKeyCodes []uint16
+    Cmds []MacroCmd
 }
 
 type Layer struct {
     Rebinds [][]string
-    Layerbinds [][][]string
-    Keybinds [][][]string
+    Layerbinds []Layerbind
+    Keybinds []Keybind
+    Macros []Macro
 }
 
 func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
@@ -73,36 +88,37 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
             // if ALL is used rebind all mods, keys, and consumer_keys
             if rebind[0] == "ALL" {
                 for _, mod := range keymap.Mods {
-                    rebind_input_keycode := keyname_to_keycode(mod.Name)
-                    rebind_output_keycode := keyname_to_keycode(rebind[1])
+                    rebind_input_keycode := keyNameToKeyCode(mod.Name)
+                    rebind_output_keycode := keyNameToKeyCode(rebind[1])
 
                     rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
                 }
                 for _, key := range keymap.Keys {
-                    rebind_input_keycode := keyname_to_keycode(key.Name)
-                    rebind_output_keycode := keyname_to_keycode(rebind[1])
+                    rebind_input_keycode := keyNameToKeyCode(key.Name)
+                    rebind_output_keycode := keyNameToKeyCode(rebind[1])
 
                     rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
                 }
                 for _, consumer_key := range keymap.Consumer_keys {
-                    rebind_input_keycode := keyname_to_keycode(consumer_key.Name)
-                    rebind_output_keycode := keyname_to_keycode(rebind[1])
+                    rebind_input_keycode := keyNameToKeyCode(consumer_key.Name)
+                    rebind_output_keycode := keyNameToKeyCode(rebind[1])
 
                     rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
                 }
             } else {
-                rebind_input_keycode := keyname_to_keycode(rebind[0])
-                rebind_output_keycode := keyname_to_keycode(rebind[1])
+                rebind_input_keycode := keyNameToKeyCode(rebind[0])
+                rebind_output_keycode := keyNameToKeyCode(rebind[1])
 
                 rebind_key(layer_rebinds, rebind_input_keycode, rebind_output_keycode)
             }
         }
 
+        /*
         var layer_layerbinds []Layerbind
         for _, layerbind := range layer.Layerbinds {
             var layerbind_input_keys []uint16
             for _, layerbind_input_key := range layerbind[0] {
-                keycode := keyname_to_keycode(layerbind_input_key)
+                keycode := keyNameToKeyCode(layerbind_input_key)
                 layerbind_input_keys = append(layerbind_input_keys, keycode)
             }
 
@@ -118,18 +134,20 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
                 State: 0,
                 Type: layerbind_type})
         }
+        */
 
+        /*
         var layer_keybinds []Keybind
         for _, keybind := range layer.Keybinds {
             var keybind_input_keys []uint16
             for _, keybind_input_key := range keybind[0] {
-                keycode := keyname_to_keycode(keybind_input_key)
+                keycode := keyNameToKeyCode(keybind_input_key)
                 keybind_input_keys = append(keybind_input_keys, keycode)
             }
 
             var bind_output_keys []uint16
             for _, bind_output_key := range keybind[1] {
-                keycode := keyname_to_keycode(bind_output_key)
+                keycode := keyNameToKeyCode(bind_output_key)
                 if multi_mod, ok := keymap.Multi_mods[keycode]; ok {
                     keycode = multi_mod.Left_code
                 }
@@ -140,9 +158,44 @@ func Parse(config_file string) ([]Rebind, [][]Layerbind, [][]Keybind) {
                 Input_keys: keybind_input_keys,
                 Output_keys: bind_output_keys})
         }
+        */
+
+        for j, keybind := range layer.Keybinds {
+            for _, key := range keybind.InputKeys {
+                keybind.InputKeyCodes = append(keybind.InputKeyCodes, keyNameToKeyCode(key))
+            }
+            layers[i].Keybinds[j].InputKeyCodes = keybind.InputKeyCodes
+
+            for _, key := range keybind.OutputKeys {
+                keyCode := keyNameToKeyCode(key)
+                if multi_mod, ok := keymap.Multi_mods[keyCode]; ok {
+                    keyCode = multi_mod.Left_code
+                }
+                keybind.OutputKeyCodes = append(keybind.OutputKeyCodes, keyCode)
+            }
+            layers[i].Keybinds[j].OutputKeyCodes = keybind.OutputKeyCodes
+        }
+
+        for j, layerbind := range layer.Layerbinds {
+            for _, key := range layerbind.InputKeys {
+                layerbind.InputKeyCodes = append(layerbind.InputKeyCodes, keyNameToKeyCode(key))
+            }
+            layers[i].Layerbinds[j].InputKeyCodes = layerbind.InputKeyCodes
+
+            layers[i].Layerbinds[j].FromLayer = i
+        }
+
+        for j, macro := range layer.Macros {
+            for _, key := range macro.InputKeys {
+                macro.InputKeyCodes = append(macro.InputKeyCodes, keyNameToKeyCode(key))
+            }
+            layers[i].Macros[j].InputKeyCodes = macro.InputKeyCodes
+        }
+
         rebinds = append(rebinds, *layer_rebinds)
-        layerbinds = append(layerbinds, layer_layerbinds)
-        keybinds = append(keybinds, layer_keybinds)
+        //layerbinds = append(layerbinds, layer_layerbinds)
+        //keybinds = append(keybinds, layer_keybinds)
+        fmt.Println(layer)
     }
     return rebinds, layerbinds, keybinds
 }
@@ -251,7 +304,7 @@ func rebind_key(layer_rebinds *Rebind, input_keycode uint16, output_keycode uint
     }
 }
 
-func keyname_to_keycode(name string) uint16 {
+func keyNameToKeyCode(name string) uint16 {
     for code, key := range keymap.Multi_mods {
         if key.Name == name {
             return code
